@@ -16,7 +16,7 @@
 
         <div class="hud" aria-live="polite">
           <div class="brand">
-            <img src="./assets/screenshots/kakalapka-close.jpeg" alt="Какалапочка" />
+            <img data-kakalapka-image="close" src="./assets/screenshots/kakalapka-close.jpeg" alt="Какалапочка" />
             <div>
               <strong>Какалапочка</strong>
               <span id="missionText">операция: весь дом мой</span>
@@ -39,7 +39,11 @@
 
         <div class="overlay is-visible" id="startOverlay">
           <div class="panel">
-            <img src="./assets/screenshots/kakalapka-cabinet.jpeg" alt="Какалапочка сидит на шкафу" />
+            <img
+              data-kakalapka-image="cabinet"
+              src="./assets/screenshots/kakalapka-cabinet.jpeg"
+              alt="Какалапочка сидит на шкафу"
+            />
             <div>
               <h1>Какалапочка: домашний рейд</h1>
               <p>
@@ -59,7 +63,11 @@
 
         <div class="overlay" id="winOverlay">
           <div class="panel">
-            <img src="./assets/screenshots/kakalapka-bed.jpeg" alt="Какалапочка отдыхает" />
+            <img
+              data-kakalapka-image="bed"
+              src="./assets/screenshots/kakalapka-bed.jpeg"
+              alt="Какалапочка отдыхает"
+            />
             <div>
               <h2 id="winTitle">Дом захвачен</h2>
               <p id="winText">Все предметы помечены. Репутация Какалапочки стала легендарной.</p>
@@ -82,6 +90,7 @@
     </main>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="./src/images.js"></script>
     <script src="./src/game.js"></script>
   </body>
 </html>

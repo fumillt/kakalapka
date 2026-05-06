@@ -14,6 +14,13 @@ const restartButton = document.querySelector("#restartButton");
 const touchButtons = document.querySelectorAll(".touch-button");
 const telegram = window.Telegram?.WebApp;
 
+for (const image of document.querySelectorAll("[data-kakalapka-image]")) {
+  const key = image.dataset.kakalapkaImage;
+  if (window.KAKALAPKA_IMAGES?.[key]) {
+    image.src = window.KAKALAPKA_IMAGES[key];
+  }
+}
+
 const WORLD = { width: 3300, height: 850, gravity: 2400 };
 const FLOOR_Y = 665;
 
