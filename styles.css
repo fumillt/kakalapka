@@ -76,6 +76,7 @@ canvas {
   justify-content: space-between;
   gap: 12px;
   pointer-events: none;
+  z-index: 5;
 }
 
 .brand,
@@ -143,6 +144,7 @@ canvas {
   opacity: 0;
   transition: opacity 180ms ease, transform 180ms ease;
   pointer-events: none;
+  z-index: 7;
 }
 
 .touch-controls {
@@ -159,6 +161,7 @@ canvas {
   border-radius: 8px;
   background: rgba(16, 13, 11, 0.58);
   backdrop-filter: blur(10px);
+  z-index: 6;
 }
 
 .move-pad,
@@ -222,6 +225,7 @@ canvas {
   padding: 22px;
   background: rgba(14, 11, 10, 0.68);
   backdrop-filter: blur(5px);
+  z-index: 10;
 }
 
 .overlay.is-visible {
@@ -349,6 +353,10 @@ kbd {
   }
 
   .touch-controls {
+    display: none;
+  }
+
+  .game-wrap.is-playing .touch-controls {
     display: flex;
   }
 
@@ -358,8 +366,7 @@ kbd {
 
   .panel {
     grid-template-columns: 1fr;
-    max-height: 92vh;
-    max-height: calc(var(--app-height) - 28px);
+    max-height: calc(var(--app-height) - 24px);
     overflow: auto;
   }
 

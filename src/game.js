@@ -231,6 +231,7 @@ function resetGame(levelIndex = currentLevelIndex) {
   stains = [];
   won = false;
   running = true;
+  document.querySelector(".game-wrap")?.classList.add("is-playing");
   winOverlay.classList.remove("is-visible");
   startOverlay.classList.remove("is-visible");
   telegram?.MainButton?.hide();
@@ -287,6 +288,7 @@ function markTarget(target) {
 function winGame() {
   won = true;
   running = false;
+  document.querySelector(".game-wrap")?.classList.remove("is-playing");
   const level = levels[currentLevelIndex];
   const hasNext = currentLevelIndex < levels.length - 1;
   winTitle.textContent = level.win;
@@ -640,43 +642,78 @@ function drawPlayer() {
   ctx.ellipse(0, 34, 46, 10, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  const sprite = !player.grounded ? catSprites.jump : speed > 80 ? catSprites.run : catSprites.idle;
-  if (sprite?.complete && sprite.naturalWidth > 0) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(4, -2, 48, 43, -0.08, 0, Math.PI * 2);
-    ctx.clip();
-    drawImageCover(sprite, -50, -52, 100, 96);
-    ctx.restore();
-
-    ctx.strokeStyle = "#fff4dd";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.ellipse(4, -2, 48, 43, -0.08, 0, Math.PI * 2);
-    ctx.stroke();
-  } else {
-    ctx.fillStyle = "#d8bd90";
-    ctx.beginPath();
-    ctx.ellipse(-4, 10, 45, 25, -0.08, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#2b211f";
-    ctx.beginPath();
-    ctx.ellipse(32, -4, 25, 24, 0.08, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
   ctx.strokeStyle = "#3b261b";
-  ctx.lineWidth = 12;
+  ctx.lineWidth = 13;
   ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(-30, 18);
-  ctx.quadraticCurveTo(-82, 4, -96, 26 + Math.sin(t * 6) * 9);
+  ctx.moveTo(-32, 12);
+  ctx.quadraticCurveTo(-84, -2, -96, 24 + Math.sin(t * 6) * 9);
+  ctx.stroke();
+
+  ctx.fillStyle = "#d8bd90";
+  ctx.beginPath();
+  ctx.ellipse(-4, 10, 45, 25, -0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#c6a574";
+  ctx.beginPath();
+  ctx.ellipse(22, -1, 31, 26, 0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#2a1f1d";
+  ctx.beginPath();
+  ctx.moveTo(5, -22);
+  ctx.lineTo(15, -53);
+  ctx.lineTo(26, -20);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(35, -22);
+  ctx.lineTo(47, -51);
+  ctx.lineTo(54, -17);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#2b211f";
+  ctx.beginPath();
+  ctx.ellipse(32, -4, 25, 24, 0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#d9eff2";
+  ctx.beginPath();
+  ctx.ellipse(23, -8, 5, 8, 0.12, 0, Math.PI * 2);
+  ctx.ellipse(42, -8, 5, 8, -0.12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#30464b";
+  ctx.beginPath();
+  ctx.ellipse(24, -8, 2, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(41, -8, 2, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#eee8db";
+  ctx.lineWidth = 1.4;
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(34, 1);
+    ctx.lineTo(68, -6 + side * 8);
+    ctx.moveTo(34, 4);
+    ctx.lineTo(70, 4 + side * 9);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "#4c3429";
+  ctx.lineWidth = 11;
+  ctx.beginPath();
+  ctx.moveTo(-14, 28);
+  ctx.lineTo(-14 + Math.sin(t * 13) * 7, 42);
+  ctx.moveTo(22, 27);
+  ctx.lineTo(22 - Math.sin(t * 13) * 5, 42);
   ctx.stroke();
 
   ctx.fillStyle = "#fff7e9";
   ctx.beginPath();
-  ctx.ellipse(-18 + Math.sin(t * 13) * 7, 41, 10, 5, 0, 0, Math.PI * 2);
-  ctx.ellipse(22 - Math.sin(t * 13) * 5, 41, 10, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(-15 + Math.sin(t * 13) * 7, 43, 10, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(22 - Math.sin(t * 13) * 5, 43, 10, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
