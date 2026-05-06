@@ -14,6 +14,36 @@ const restartButton = document.querySelector("#restartButton");
 const touchButtons = document.querySelectorAll(".touch-button");
 const telegram = window.Telegram?.WebApp;
 
+function loadImage(src) {
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+  image.src = src;
+  return image;
+}
+
+const catSprites = {
+  idle: loadImage(window.KAKALAPKA_IMAGES?.idle || "./assets/cat/portrait.jpeg"),
+  run: loadImage(window.KAKALAPKA_IMAGES?.run || "./assets/cat/floor.jpeg"),
+  jump: loadImage(window.KAKALAPKA_IMAGES?.jump || "./assets/cat/sink.jpeg"),
+  victory: loadImage(window.KAKALAPKA_IMAGES?.victory || "./assets/cat/towel.jpeg"),
+};
+
+const objectSprites = {
+  shoe: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f45f.svg"),
+  box: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4e6.svg"),
+  cabinet: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f5c4.svg"),
+  toilet: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6bd.svg"),
+  bag: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6cd.svg"),
+  bowl: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f963.svg"),
+  kettle: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1fad6.svg"),
+  pillow: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6cf.svg"),
+  tv: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4fa.svg"),
+  couch: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6cb.svg"),
+  clothes: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f456.svg"),
+  laptop: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4bb.svg"),
+  bathtub: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6c1.svg"),
+};
+
 for (const image of document.querySelectorAll("[data-kakalapka-image]")) {
   const key = image.dataset.kakalapkaImage;
   if (window.KAKALAPKA_IMAGES?.[key]) {
@@ -55,6 +85,17 @@ function initTelegram() {
   telegram.setHeaderColor?.("#15110f");
   telegram.setBackgroundColor?.("#15110f");
   telegram.onEvent?.("viewportChanged", syncAppHeight);
+}
+
+function haptic(kind = "light") {
+  navigator.vibrate?.(kind === "action" ? 45 : 18);
+  if (telegram?.HapticFeedback) {
+    if (kind === "action") {
+      telegram.HapticFeedback.impactOccurred("medium");
+    } else {
+      telegram.HapticFeedback.selectionChanged();
+    }
+  }
 }
 
 const player = {
@@ -128,6 +169,33 @@ const levels = [
       { x: 2748, y: 504, w: 52, h: 42, name: "кроссовки на диване", icon: "shoe", marked: false },
       { x: 3104, y: 406, w: 52, h: 42, name: "кроссовки у телевизора", icon: "shoe", marked: false },
       { x: 3208, y: 616, w: 52, h: 42, name: "последние спрятанные кроссовки", icon: "shoe", marked: false },
+    ],
+  },
+  {
+    title: "Уровень 3: ванная без свидетелей",
+    intro: "Ванная слишком чистая. Это подозрительно",
+    win: "Ванная стала честной",
+    targets: [
+      { x: 960, y: 494, w: 64, h: 50, name: "полотенце", icon: "clothes", marked: false },
+      { x: 1108, y: 494, w: 64, h: 50, name: "ванная тумба", icon: "cabinet", marked: false },
+      { x: 1300, y: 364, w: 78, h: 62, name: "унитаз", icon: "toilet", marked: false },
+      { x: 1468, y: 504, w: 70, h: 52, name: "ванна", icon: "bathtub", marked: false },
+      { x: 1588, y: 510, w: 68, h: 50, name: "пакет наполнителя", icon: "bag", marked: false },
+      { x: 1744, y: 506, w: 64, h: 50, name: "миска", icon: "bowl", marked: false },
+    ],
+  },
+  {
+    title: "Уровень 4: финал на диване",
+    intro: "Финальный рейд: важные вещи хозяев",
+    win: "Финальный хаос оформлен",
+    targets: [
+      { x: 1860, y: 506, w: 64, h: 50, name: "миска на кухне", icon: "bowl", marked: false },
+      { x: 2212, y: 404, w: 70, h: 52, name: "чайник", icon: "kettle", marked: false },
+      { x: 2458, y: 546, w: 64, h: 50, name: "ноутбук", icon: "laptop", marked: false },
+      { x: 2708, y: 496, w: 76, h: 54, name: "диван", icon: "couch", marked: false },
+      { x: 2868, y: 498, w: 70, h: 52, name: "подушка", icon: "pillow", marked: false },
+      { x: 3108, y: 394, w: 78, h: 58, name: "телевизор", icon: "tv", marked: false },
+      { x: 3208, y: 616, w: 56, h: 42, name: "последний кроссовок", icon: "shoe", marked: false },
     ],
   },
 ];
@@ -207,7 +275,7 @@ function markTarget(target) {
     });
   }
 
-  showToast(`${target.name}: помечено`);
+  showToast(`${target.name}: обоссано`);
   updateHud();
 
   const marked = targets.filter((item) => item.marked).length;
@@ -222,7 +290,7 @@ function winGame() {
   const level = levels[currentLevelIndex];
   const hasNext = currentLevelIndex < levels.length - 1;
   winTitle.textContent = level.win;
-  winText.textContent = `${level.win}. Помечено целей: ${targets.length}. Какалапочка торжественно делает вид, что ничего не произошло.`;
+  winText.textContent = `${level.win}. Обоссано целей: ${targets.length}. Какалапочка торжественно делает вид, что ничего не произошло.`;
   restartButton.textContent = hasNext ? "Следующий уровень" : "Начать заново";
   if (telegram?.MainButton) {
     telegram.MainButton.setText(hasNext ? "Следующий уровень" : "Начать заново");
@@ -288,11 +356,12 @@ function updatePlayer(dt) {
   moveAndCollide(dt);
 
   if (justPressed.has("e") || justPressed.has("у")) {
+    haptic("action");
     const target = getNearbyTarget();
     if (target) {
       markTarget(target);
     } else {
-      showToast("нужно подойти ближе к предмету", 0.95);
+      showToast("подойди ближе и жми «Обоссать»", 0.95);
     }
   }
 
@@ -367,7 +436,7 @@ function update(dt) {
 
   const nearby = getNearbyTarget();
   if (nearby && toastTimer <= 0.05) {
-    showToast(`E: пометить ${nearby.name}`, 0.22);
+    showToast(`Обоссать: ${nearby.name}`, 0.22);
   }
 
   updateHud();
@@ -460,6 +529,21 @@ function drawTargets() {
     ctx.strokeStyle = target.marked ? "#4d3f31" : "#573b2e";
     ctx.lineWidth = 4;
 
+    const sprite = objectSprites[target.icon];
+    if (sprite?.complete && sprite.naturalWidth > 0) {
+      ctx.fillStyle = target.marked ? "rgba(91, 73, 52, 0.66)" : "rgba(255, 248, 227, 0.86)";
+      roundRect(x - 8, y - 8, target.w + 16, target.h + 16, 12, true, true);
+      ctx.drawImage(sprite, x - 2, y - 2, target.w + 4, target.h + 4);
+      if (!target.marked) {
+        ctx.fillStyle = "#fff6d5";
+        ctx.beginPath();
+        ctx.arc(x + target.w / 2, y - 14, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+      continue;
+    }
+
     if (target.icon === "shoe") {
       roundRect(x, y + 16, target.w, 22, 10, true, true);
       ctx.fillStyle = "#3b3029";
@@ -530,6 +614,15 @@ function drawStains() {
   }
 }
 
+function drawImageCover(image, x, y, width, height) {
+  const ratio = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  const sourceWidth = width / ratio;
+  const sourceHeight = height / ratio;
+  const sourceX = (image.naturalWidth - sourceWidth) / 2;
+  const sourceY = (image.naturalHeight - sourceHeight) / 2;
+  ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+}
+
 function drawPlayer() {
   const t = player.stateTime;
   const speed = Math.abs(player.vx);
@@ -547,78 +640,43 @@ function drawPlayer() {
   ctx.ellipse(0, 34, 46, 10, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = "#3b261b";
-  ctx.lineWidth = 13;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(-32, 12);
-  ctx.quadraticCurveTo(-84, -2, -96, 24 + Math.sin(t * 6) * 9);
-  ctx.stroke();
-
-  ctx.fillStyle = "#d8bd90";
-  ctx.beginPath();
-  ctx.ellipse(-4, 10, 45, 25, -0.08, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#c6a574";
-  ctx.beginPath();
-  ctx.ellipse(22, -1, 31, 26, 0.08, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#2a1f1d";
-  ctx.beginPath();
-  ctx.moveTo(5, -22);
-  ctx.lineTo(15, -53);
-  ctx.lineTo(26, -20);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(35, -22);
-  ctx.lineTo(47, -51);
-  ctx.lineTo(54, -17);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = "#2b211f";
-  ctx.beginPath();
-  ctx.ellipse(32, -4, 25, 24, 0.08, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#d9eff2";
-  ctx.beginPath();
-  ctx.ellipse(23, -8, 5, 8, 0.12, 0, Math.PI * 2);
-  ctx.ellipse(42, -8, 5, 8, -0.12, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#30464b";
-  ctx.beginPath();
-  ctx.ellipse(24, -8, 2, 5, 0, 0, Math.PI * 2);
-  ctx.ellipse(41, -8, 2, 5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = "#eee8db";
-  ctx.lineWidth = 1.4;
-  for (const side of [-1, 1]) {
+  const sprite = !player.grounded ? catSprites.jump : speed > 80 ? catSprites.run : catSprites.idle;
+  if (sprite?.complete && sprite.naturalWidth > 0) {
+    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(34, 1);
-    ctx.lineTo(68, -6 + side * 8);
-    ctx.moveTo(34, 4);
-    ctx.lineTo(70, 4 + side * 9);
+    ctx.ellipse(4, -2, 48, 43, -0.08, 0, Math.PI * 2);
+    ctx.clip();
+    drawImageCover(sprite, -50, -52, 100, 96);
+    ctx.restore();
+
+    ctx.strokeStyle = "#fff4dd";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.ellipse(4, -2, 48, 43, -0.08, 0, Math.PI * 2);
     ctx.stroke();
+  } else {
+    ctx.fillStyle = "#d8bd90";
+    ctx.beginPath();
+    ctx.ellipse(-4, 10, 45, 25, -0.08, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#2b211f";
+    ctx.beginPath();
+    ctx.ellipse(32, -4, 25, 24, 0.08, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  ctx.strokeStyle = "#4c3429";
-  ctx.lineWidth = 11;
+  ctx.strokeStyle = "#3b261b";
+  ctx.lineWidth = 12;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(-14, 28);
-  ctx.lineTo(-14 + Math.sin(t * 13) * 7, 42);
-  ctx.moveTo(22, 27);
-  ctx.lineTo(22 - Math.sin(t * 13) * 5, 42);
+  ctx.moveTo(-30, 18);
+  ctx.quadraticCurveTo(-82, 4, -96, 26 + Math.sin(t * 6) * 9);
   ctx.stroke();
 
   ctx.fillStyle = "#fff7e9";
   ctx.beginPath();
-  ctx.ellipse(-15 + Math.sin(t * 13) * 7, 43, 10, 5, 0, 0, Math.PI * 2);
-  ctx.ellipse(22 - Math.sin(t * 13) * 5, 43, 10, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(-18 + Math.sin(t * 13) * 7, 41, 10, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(22 - Math.sin(t * 13) * 5, 41, 10, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -699,6 +757,7 @@ for (const button of touchButtons) {
     event.preventDefault();
     if (!keys.has(key)) justPressed.add(key);
     keys.add(key);
+    haptic(key === "e" ? "action" : "light");
     button.classList.add("is-held");
     button.setPointerCapture?.(event.pointerId);
   };

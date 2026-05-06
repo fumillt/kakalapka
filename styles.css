@@ -6,6 +6,7 @@
   color: #fff9ef;
   --app-height: 100vh;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --controls-height: 112px;
 }
 
 * {
@@ -146,12 +147,18 @@ canvas {
 
 .touch-controls {
   position: absolute;
-  inset: auto 16px calc(16px + var(--safe-bottom)) 16px;
+  inset: auto 14px calc(14px + var(--safe-bottom)) 14px;
   display: none;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 18px;
   pointer-events: none;
+  min-height: var(--controls-height);
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  background: rgba(16, 13, 11, 0.58);
+  backdrop-filter: blur(10px);
 }
 
 .move-pad,
@@ -163,8 +170,8 @@ canvas {
 }
 
 .touch-button {
-  width: 64px;
-  height: 64px;
+  width: 76px;
+  height: 76px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -172,7 +179,7 @@ canvas {
   border-radius: 8px;
   background: rgba(20, 16, 14, 0.76);
   color: #fff8e8;
-  font-size: 1.35rem;
+  font-size: 1.65rem;
   font-weight: 900;
   line-height: 1;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
@@ -191,7 +198,15 @@ canvas {
 
 .touch-button.jump,
 .touch-button.mark {
-  width: 72px;
+  width: 104px;
+}
+
+.touch-button.mark {
+  width: min(35vw, 160px);
+  padding: 0 12px;
+  background: #f5c65f;
+  color: #26180d;
+  font-size: clamp(1rem, 4.2vw, 1.45rem);
 }
 
 .toast.is-visible {
@@ -295,10 +310,23 @@ kbd {
 
   .hud {
     inset: 8px 8px auto 8px;
+    gap: 8px;
   }
 
   .brand {
-    max-width: 50vw;
+    max-width: 46vw;
+    min-height: 48px;
+    padding: 6px 9px 6px 6px;
+  }
+
+  .brand img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .brand strong,
+  .meter strong {
+    font-size: 0.92rem;
   }
 
   .brand span {
@@ -310,13 +338,14 @@ kbd {
   }
 
   .meter {
-    min-width: 78px;
-    min-height: 46px;
-    padding: 7px 8px;
+    min-width: 72px;
+    min-height: 48px;
+    padding: 6px 8px;
   }
 
   .toast {
-    bottom: calc(98px + var(--safe-bottom));
+    bottom: calc(var(--controls-height) + 34px + var(--safe-bottom));
+    font-size: 0.95rem;
   }
 
   .touch-controls {
@@ -340,5 +369,32 @@ kbd {
 
   .keys {
     grid-template-columns: repeat(2, auto) 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  :root {
+    --controls-height: 104px;
+  }
+
+  .touch-controls {
+    inset-inline: 8px;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .move-pad,
+  .action-pad {
+    gap: 8px;
+  }
+
+  .touch-button {
+    width: 64px;
+    height: 68px;
+    font-size: 1.35rem;
+  }
+
+  .touch-button.jump {
+    width: 76px;
   }
 }
