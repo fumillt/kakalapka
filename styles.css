@@ -44,9 +44,12 @@ button:hover {
 
 .shell {
   min-height: var(--app-height);
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 18px;
+  gap: 14px;
 }
 
 .game-wrap {
@@ -148,13 +151,12 @@ canvas {
 }
 
 .touch-controls {
-  position: absolute;
-  inset: auto 14px calc(14px + var(--safe-bottom)) 14px;
+  position: relative;
   display: none;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  pointer-events: none;
+  width: min(100%, 760px);
   min-height: var(--controls-height);
   padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -169,7 +171,6 @@ canvas {
   display: flex;
   align-items: center;
   gap: 12px;
-  pointer-events: auto;
 }
 
 .touch-button {
@@ -300,16 +301,18 @@ kbd {
   }
 
   .shell {
-    padding: 0;
+    justify-content: center;
+    padding: 10px 10px calc(18px + var(--safe-bottom));
+    gap: 10px;
   }
 
   .game-wrap {
     width: 100%;
-    height: var(--app-height);
-    max-height: none;
-    aspect-ratio: auto;
-    border: 0;
-    border-radius: 0;
+    max-width: 760px;
+    height: auto;
+    max-height: calc(var(--app-height) - var(--controls-height) - 48px - var(--safe-bottom));
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
   }
 
   .hud {
@@ -348,7 +351,7 @@ kbd {
   }
 
   .toast {
-    bottom: calc(var(--controls-height) + 34px + var(--safe-bottom));
+    bottom: 12px;
     font-size: 0.95rem;
   }
 
@@ -356,7 +359,7 @@ kbd {
     display: none;
   }
 
-  .game-wrap.is-playing .touch-controls {
+  .shell.is-playing .touch-controls {
     display: flex;
   }
 
@@ -385,7 +388,6 @@ kbd {
   }
 
   .touch-controls {
-    inset-inline: 8px;
     gap: 8px;
     padding: 8px;
   }

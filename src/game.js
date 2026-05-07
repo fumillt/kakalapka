@@ -113,14 +113,14 @@ const player = {
   stateTime: 0,
 };
 
-const rooms = [
+const defaultRooms = [
   { x: 0, w: 830, name: "прихожая", wall: "#aab8b4", trim: "#73675c" },
   { x: 830, w: 820, name: "ванная", wall: "#c4e5e2", trim: "#4aa5a5" },
   { x: 1650, w: 820, name: "кухня", wall: "#ead9bf", trim: "#c97958" },
   { x: 2470, w: 830, name: "комната", wall: "#b9adc8", trim: "#6c587b" },
 ];
 
-const platforms = [
+const defaultPlatforms = [
   { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
   { x: 96, y: 566, w: 230, h: 32, type: "shoe-rack" },
   { x: 410, y: 470, w: 220, h: 28, type: "shelf" },
@@ -134,6 +134,9 @@ const platforms = [
   { x: 2640, y: 550, w: 350, h: 36, type: "sofa" },
   { x: 3048, y: 452, w: 180, h: 28, type: "tv-stand" },
 ];
+
+let rooms = defaultRooms.map((room) => ({ ...room }));
+let platforms = defaultPlatforms.map((platform) => ({ ...platform }));
 
 const levels = [
   {
@@ -200,8 +203,129 @@ const levels = [
   },
 ];
 
-targets = levels[0].targets.map((target) => ({ ...target, marked: false }));
-missionText.textContent = levels[0].title.toLowerCase();
+const locationThemes = [
+  {
+    name: "балконный заговор",
+    rooms: [
+      ["балкон", "#cfe1dc", "#4b8d8a"],
+      ["кладовка", "#c7beb2", "#796956"],
+      ["комната", "#c9b7d8", "#71547e"],
+      ["ночной угол", "#b6c2d5", "#4f6076"],
+    ],
+    icons: ["shoe", "box", "clothes", "pillow", "bag", "laptop"],
+  },
+  {
+    name: "кухонный саботаж",
+    rooms: [
+      ["кухня", "#ecd9b7", "#c97958"],
+      ["стол", "#d7c8ac", "#8b6046"],
+      ["холодный угол", "#c8dfdf", "#5a9696"],
+      ["кладовка", "#d0c7b5", "#78634a"],
+    ],
+    icons: ["bowl", "kettle", "box", "bag", "shoe", "laptop"],
+  },
+  {
+    name: "диванный рейв",
+    rooms: [
+      ["диван", "#c5b3cf", "#6c587b"],
+      ["телек", "#b8c2c6", "#56656b"],
+      ["плед", "#d8c2b5", "#9a6858"],
+      ["тайник", "#c8c1ac", "#7b6d4c"],
+    ],
+    icons: ["couch", "pillow", "tv", "laptop", "shoe", "clothes"],
+  },
+  {
+    name: "ванная тревога",
+    rooms: [
+      ["ванная", "#c4e5e2", "#4aa5a5"],
+      ["раковина", "#dce9e5", "#7aa5a0"],
+      ["стирка", "#ccd8e1", "#6c8294"],
+      ["трон", "#d9e4dd", "#697c70"],
+    ],
+    icons: ["toilet", "bathtub", "clothes", "cabinet", "bag", "shoe"],
+  },
+];
+
+function seededRandom(seed) {
+  let value = seed % 2147483647;
+  if (value <= 0) value += 2147483646;
+  return () => {
+    value = (value * 16807) % 2147483647;
+    return (value - 1) / 2147483646;
+  };
+}
+
+function pick(list, random) {
+  return list[Math.floor(random() * list.length)];
+}
+
+function makeRooms(theme) {
+  const width = WORLD.width / theme.rooms.length;
+  return theme.rooms.map(([name, wall, trim], index) => ({
+    x: index * width,
+    w: width,
+    name,
+    wall,
+    trim,
+  }));
+}
+
+function generateProceduralLevel(index) {
+  const random = seededRandom(9000 + index * 97);
+  const theme = locationThemes[index % locationThemes.length];
+  const generatedPlatforms = [{ x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" }];
+  let x = 96;
+  let y = 568;
+
+  for (let i = 0; i < 12; i += 1) {
+    const w = 170 + Math.floor(random() * 110);
+    const nextY = clamp(y + (random() - 0.5) * 190, 405, 590);
+    generatedPlatforms.push({
+      x,
+      y: nextY,
+      w,
+      h: 28 + Math.floor(random() * 8),
+      type: pick(["shelf", "table", "chair", "counter", "sofa", "bath-cabinet"], random),
+    });
+    x += 215 + Math.floor(random() * 105);
+    y = nextY;
+  }
+
+  const targetCount = Math.min(8 + Math.floor(index / 2), 15);
+  const generatedTargets = generatedPlatforms
+    .slice(1)
+    .sort(() => random() - 0.5)
+    .slice(0, targetCount)
+    .map((platform, targetIndex) => {
+      const icon = pick(theme.icons, random);
+      return {
+        x: platform.x + 24 + Math.floor(random() * Math.max(1, platform.w - 92)),
+        y: platform.y - 52,
+        w: icon === "tv" || icon === "couch" ? 76 : 60,
+        h: 48,
+        name: `${theme.name}: цель ${targetIndex + 1}`,
+        icon,
+        marked: false,
+      };
+    })
+    .sort((a, b) => a.x - b.x);
+
+  return {
+    title: `Уровень ${index + 1}: ${theme.name}`,
+    intro: `Новая локация: ${theme.name}`,
+    win: `${theme.name} зачищен`,
+    rooms: makeRooms(theme),
+    platforms: generatedPlatforms,
+    targets: generatedTargets,
+  };
+}
+
+function getLevel(index) {
+  return levels[index] || generateProceduralLevel(index);
+}
+
+targets = getLevel(0).targets.map((target) => ({ ...target, marked: false }));
+missionText.textContent = getLevel(0).title.toLowerCase();
 
 function rectsOverlap(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
@@ -212,8 +336,10 @@ function clamp(value, min, max) {
 }
 
 function resetGame(levelIndex = currentLevelIndex) {
-  currentLevelIndex = clamp(levelIndex, 0, levels.length - 1);
-  const level = levels[currentLevelIndex];
+  currentLevelIndex = Math.max(0, levelIndex);
+  const level = getLevel(currentLevelIndex);
+  rooms = (level.rooms || defaultRooms).map((room) => ({ ...room }));
+  platforms = (level.platforms || defaultPlatforms).map((platform) => ({ ...platform }));
   targets = level.targets.map((target) => ({ ...target, marked: false }));
   player.x = 110;
   player.y = 568;
@@ -232,6 +358,7 @@ function resetGame(levelIndex = currentLevelIndex) {
   won = false;
   running = true;
   document.querySelector(".game-wrap")?.classList.add("is-playing");
+  document.querySelector(".shell")?.classList.add("is-playing");
   winOverlay.classList.remove("is-visible");
   startOverlay.classList.remove("is-visible");
   telegram?.MainButton?.hide();
@@ -289,13 +416,13 @@ function winGame() {
   won = true;
   running = false;
   document.querySelector(".game-wrap")?.classList.remove("is-playing");
-  const level = levels[currentLevelIndex];
-  const hasNext = currentLevelIndex < levels.length - 1;
+  document.querySelector(".shell")?.classList.remove("is-playing");
+  const level = getLevel(currentLevelIndex);
   winTitle.textContent = level.win;
   winText.textContent = `${level.win}. Обоссано целей: ${targets.length}. Какалапочка торжественно делает вид, что ничего не произошло.`;
-  restartButton.textContent = hasNext ? "Следующий уровень" : "Начать заново";
+  restartButton.textContent = "Следующий уровень";
   if (telegram?.MainButton) {
-    telegram.MainButton.setText(hasNext ? "Следующий уровень" : "Начать заново");
+    telegram.MainButton.setText("Следующий уровень");
     telegram.MainButton.show();
   }
   setTimeout(() => winOverlay.classList.add("is-visible"), 400);
@@ -776,14 +903,12 @@ window.addEventListener("keyup", (event) => {
 
 startButton.addEventListener("click", () => resetGame(0));
 restartButton.addEventListener("click", () => {
-  const nextLevel = currentLevelIndex < levels.length - 1 ? currentLevelIndex + 1 : 0;
-  resetGame(nextLevel);
+  resetGame(currentLevelIndex + 1);
 });
 
 if (telegram?.MainButton) {
   telegram.MainButton.onClick(() => {
-    const nextLevel = currentLevelIndex < levels.length - 1 ? currentLevelIndex + 1 : 0;
-    resetGame(nextLevel);
+    resetGame(currentLevelIndex + 1);
     telegram.MainButton.hide();
   });
 }
