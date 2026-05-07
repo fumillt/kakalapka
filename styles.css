@@ -47,16 +47,17 @@ button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 18px;
   gap: 14px;
+  position: relative;
 }
 
 .game-wrap {
   position: relative;
   width: min(100%, 1280px);
   aspect-ratio: 16 / 9;
-  max-height: calc(100vh - 36px);
+  max-height: calc(var(--app-height) - 36px);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
@@ -72,8 +73,8 @@ canvas {
 }
 
 .hud {
-  position: absolute;
-  inset: 14px 14px auto 14px;
+  position: relative;
+  width: min(100%, 760px);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -132,10 +133,9 @@ canvas {
 }
 
 .toast {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
+  position: relative;
+  display: none;
+  transform: none;
   min-width: 240px;
   max-width: calc(100% - 32px);
   padding: 10px 14px;
@@ -148,6 +148,10 @@ canvas {
   transition: opacity 180ms ease, transform 180ms ease;
   pointer-events: none;
   z-index: 7;
+}
+
+.shell.is-playing .toast.is-visible {
+  display: block;
 }
 
 .touch-controls {
@@ -215,11 +219,11 @@ canvas {
 
 .toast.is-visible {
   opacity: 1;
-  transform: translate(-50%, -5px);
+  transform: translateY(-2px);
 }
 
 .overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: none;
   place-items: center;
@@ -301,22 +305,23 @@ kbd {
   }
 
   .shell {
-    justify-content: center;
-    padding: 10px 10px calc(18px + var(--safe-bottom));
-    gap: 10px;
+    justify-content: flex-start;
+    padding: 8px 10px calc(14px + var(--safe-bottom));
+    gap: 8px;
   }
 
   .game-wrap {
-    width: 100%;
+    width: min(100%, 760px);
     max-width: 760px;
-    height: auto;
-    max-height: calc(var(--app-height) - var(--controls-height) - 48px - var(--safe-bottom));
-    aspect-ratio: 16 / 9;
+    height: min(52vw, calc(var(--app-height) - var(--controls-height) - 140px - var(--safe-bottom)));
+    min-height: 230px;
+    max-height: 420px;
+    aspect-ratio: auto;
     border-radius: 8px;
   }
 
   .hud {
-    inset: 8px 8px auto 8px;
+    width: min(100%, 760px);
     gap: 8px;
   }
 
@@ -351,7 +356,8 @@ kbd {
   }
 
   .toast {
-    bottom: 12px;
+    min-height: 36px;
+    padding: 8px 12px;
     font-size: 0.95rem;
   }
 
@@ -369,7 +375,7 @@ kbd {
 
   .panel {
     grid-template-columns: 1fr;
-    max-height: calc(var(--app-height) - 24px);
+    max-height: calc(var(--app-height) - 28px);
     overflow: auto;
   }
 
