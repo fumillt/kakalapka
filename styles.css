@@ -44,10 +44,10 @@ button:hover {
 
 .shell {
   min-height: var(--app-height);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  justify-items: center;
+  align-items: stretch;
   padding: 18px;
   gap: 14px;
   position: relative;
@@ -56,8 +56,9 @@ button:hover {
 .game-wrap {
   position: relative;
   width: min(100%, 1280px);
-  aspect-ratio: 16 / 9;
-  max-height: calc(var(--app-height) - 36px);
+  height: 100%;
+  min-height: 0;
+  max-height: none;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
@@ -305,7 +306,7 @@ kbd {
   }
 
   .shell {
-    justify-content: flex-start;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
     padding: 8px 10px calc(14px + var(--safe-bottom));
     gap: 8px;
   }
@@ -313,10 +314,9 @@ kbd {
   .game-wrap {
     width: min(100%, 760px);
     max-width: 760px;
-    height: min(52vw, calc(var(--app-height) - var(--controls-height) - 140px - var(--safe-bottom)));
-    min-height: 230px;
-    max-height: 420px;
-    aspect-ratio: auto;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
     border-radius: 8px;
   }
 
