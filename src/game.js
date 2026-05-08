@@ -181,9 +181,6 @@ const levels = [
     rooms: defaultRooms,
     platforms: [
       { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
-      { x: 620, y: 500, w: 250, h: 26, type: "shelf" },
-      { x: 1410, y: 440, w: 260, h: 26, type: "shelf" },
-      { x: 2420, y: 482, w: 270, h: 26, type: "shelf" },
     ],
     furniture: [
       { x: 520, y: FLOOR_Y - 52, w: 220, h: 52, type: "shoe-rack" },
@@ -199,11 +196,11 @@ const levels = [
     targets: [
       { x: 340, y: FLOOR_Y - 46, w: 54, h: 42, name: "миска с едой", icon: "bowl", marked: false },
       { x: 520, y: FLOOR_Y - 46, w: 54, h: 42, name: "тапок хозяина", icon: "shoe", marked: false },
-      { x: 780, y: 452, w: 56, h: 46, name: "ключи на полке", icon: "box", marked: false },
+      { x: 650, y: FLOOR_Y - 100, w: 56, h: 46, name: "ключи на лавке", icon: "box", marked: false },
       { x: 1040, y: FLOOR_Y - 48, w: 76, h: 48, name: "диванная подушка", icon: "pillow", marked: false },
-      { x: 1500, y: 390, w: 70, h: 52, name: "банка на высокой полке", icon: "cabinet", marked: false },
+      { x: 1500, y: FLOOR_Y - 52, w: 70, h: 52, name: "банка у шторы", icon: "cabinet", marked: false },
       { x: 1910, y: FLOOR_Y - 56, w: 72, h: 54, name: "пакет наполнителя", icon: "bag", marked: false },
-      { x: 2520, y: 435, w: 68, h: 48, name: "чайник на полке", icon: "kettle", marked: false },
+      { x: 1850, y: FLOOR_Y - 143, w: 68, h: 48, name: "чайник на тумбе", icon: "kettle", marked: false },
       { x: 2900, y: FLOOR_Y - 58, w: 74, h: 56, name: "телевизор", icon: "tv", marked: false },
     ],
   },
@@ -220,9 +217,6 @@ const levels = [
     ],
     platforms: [
       { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
-      { x: 760, y: 492, w: 270, h: 26, type: "shelf" },
-      { x: 1540, y: 448, w: 240, h: 26, type: "shelf" },
-      { x: 2300, y: 498, w: 300, h: 26, type: "shelf" },
     ],
     furniture: [
       { x: 520, y: FLOOR_Y - 58, w: 260, h: 58, type: "shoe-rack" },
@@ -239,12 +233,12 @@ const levels = [
       { x: 340, y: FLOOR_Y - 46, w: 54, h: 42, name: "миска с едой", icon: "bowl", marked: false },
       { x: 470, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки у входа", icon: "shoe", marked: false },
       { x: 650, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки под лавкой", icon: "shoe", marked: false },
-      { x: 880, y: 444, w: 54, h: 42, name: "кроссовки на полке", icon: "shoe", marked: false },
-      { x: 1220, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки у шкафа", icon: "shoe", marked: false },
-      { x: 1660, y: 400, w: 54, h: 42, name: "кроссовки наверху", icon: "shoe", marked: false },
-      { x: 2040, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки у дивана", icon: "shoe", marked: false },
-      { x: 2430, y: 450, w: 54, h: 42, name: "кроссовки на дальней полке", icon: "shoe", marked: false },
-      { x: 2910, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки под кроватью", icon: "shoe", marked: false },
+      { x: 660, y: FLOOR_Y - 104, w: 54, h: 42, name: "кроссовки на лавке", icon: "shoe", marked: false },
+      { x: 1220, y: FLOOR_Y - 138, w: 54, h: 42, name: "кроссовки на шкафчике", icon: "shoe", marked: false },
+      { x: 1660, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки у шторы", icon: "shoe", marked: false },
+      { x: 2040, y: FLOOR_Y - 118, w: 54, h: 42, name: "кроссовки на диване", icon: "shoe", marked: false },
+      { x: 2430, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки у дальней стены", icon: "shoe", marked: false },
+      { x: 2910, y: FLOOR_Y - 122, w: 54, h: 42, name: "кроссовки на кровати", icon: "shoe", marked: false },
     ],
   },
   {
@@ -260,9 +254,6 @@ const levels = [
     ],
     platforms: [
       { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
-      { x: 900, y: 485, w: 260, h: 26, type: "shelf" },
-      { x: 1740, y: 445, w: 260, h: 26, type: "shelf" },
-      { x: 2600, y: 496, w: 260, h: 26, type: "shelf" },
     ],
     furniture: [
       { x: 330, y: FLOOR_Y - 42, w: 330, h: 42, type: "rug" },
@@ -280,12 +271,12 @@ const levels = [
     targets: [
       { x: 340, y: FLOOR_Y - 46, w: 54, h: 42, name: "миска с едой", icon: "bowl", marked: false },
       { x: 420, y: FLOOR_Y - 50, w: 82, h: 48, name: "коврик у двери", icon: "pillow", marked: false },
-      { x: 850, y: FLOOR_Y - 54, w: 82, h: 54, name: "кровать хозяев", icon: "bed", marked: false },
-      { x: 1000, y: 432, w: 72, h: 50, name: "подушка на полке", icon: "pillow", marked: false },
-      { x: 1500, y: FLOOR_Y - 52, w: 82, h: 52, name: "диван", icon: "couch", marked: false },
-      { x: 1860, y: 392, w: 72, h: 50, name: "плед наверху", icon: "clothes", marked: false },
+      { x: 850, y: FLOOR_Y - 138, w: 82, h: 54, name: "кровать хозяев", icon: "bed", marked: false },
+      { x: 1000, y: FLOOR_Y - 136, w: 72, h: 50, name: "подушка на кровати", icon: "pillow", marked: false },
+      { x: 1500, y: FLOOR_Y - 120, w: 82, h: 52, name: "диван", icon: "couch", marked: false },
+      { x: 1860, y: FLOOR_Y - 50, w: 72, h: 50, name: "плед на полу", icon: "clothes", marked: false },
       { x: 2310, y: FLOOR_Y - 50, w: 82, h: 48, name: "ковер в гостиной", icon: "pillow", marked: false },
-      { x: 2700, y: 444, w: 72, h: 50, name: "последняя подушка", icon: "pillow", marked: false },
+      { x: 2980, y: FLOOR_Y - 136, w: 72, h: 50, name: "последняя подушка", icon: "pillow", marked: false },
     ],
   },
 ];
@@ -468,9 +459,9 @@ function getNearbyTarget() {
 
 function getNearbyWater() {
   const reach = {
-    x: player.x - 26,
+    x: player.x - 70,
     y: player.y - 14,
-    w: player.w + 52,
+    w: player.w + 140,
     h: player.h + 32,
   };
   return waterStations.find((station) => rectsOverlap(reach, station));
@@ -550,8 +541,8 @@ function triggerCarrierFinale() {
   player.locked = true;
   player.vx = 0;
   player.vy = 0;
-  player.x = carrier.x + 18;
-  player.y = carrier.y + carrier.h - player.h;
+  player.x = carrier.x + carrier.w / 2 - player.w / 2;
+  player.y = carrier.y + carrier.h - player.h + 14;
   finale = { time: 0 };
   setStatus("Переноска захлопнулась. Миссия выполнена");
   haptic("action");
@@ -637,8 +628,9 @@ function moveAndCollide(dt) {
   player.x += player.vx * dt;
   player.x = clamp(player.x, 18, WORLD.width - player.w - 18);
 
+  const solids = platforms.concat(furniture.filter((item) => item.type !== "rug"));
   const horizontalBody = { x: player.x, y: player.y, w: player.w, h: player.h };
-  for (const platform of platforms) {
+  for (const platform of solids) {
     if (platform.type === "floor") continue;
     if (!rectsOverlap(horizontalBody, platform)) continue;
     if (player.vx > 0) player.x = platform.x - player.w;
@@ -650,7 +642,7 @@ function moveAndCollide(dt) {
   player.grounded = false;
   const verticalBody = { x: player.x, y: player.y, w: player.w, h: player.h };
 
-  for (const platform of platforms) {
+  for (const platform of solids) {
     if (!rectsOverlap(verticalBody, platform)) continue;
     if (player.vy > 0) {
       player.y = platform.y - player.h;
@@ -725,7 +717,9 @@ function draw() {
   drawTargets();
   drawPlatforms();
   drawCarrier(false);
-  drawPlayer();
+  if (!carrier?.caught) {
+    drawPlayer();
+  }
   drawCarrier(true);
   drawParticles();
 
@@ -902,6 +896,38 @@ function drawCarrier(coverPlayer) {
 
   if (coverPlayer && carrier.caught) {
     const slam = Math.min(1, finale ? finale.time / 0.4 : 1);
+    ctx.save();
+    ctx.beginPath();
+    roundRect(x + 27, y + 31, carrier.w - 54, carrier.h - 40, 7, false);
+    ctx.clip();
+    ctx.fillStyle = "#2b211f";
+    ctx.beginPath();
+    ctx.ellipse(x + carrier.w / 2, y + 46, 22, 19, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#211715";
+    ctx.beginPath();
+    ctx.moveTo(x + carrier.w / 2 - 18, y + 34);
+    ctx.lineTo(x + carrier.w / 2 - 10, y + 10);
+    ctx.lineTo(x + carrier.w / 2 - 2, y + 34);
+    ctx.moveTo(x + carrier.w / 2 + 5, y + 34);
+    ctx.lineTo(x + carrier.w / 2 + 16, y + 10);
+    ctx.lineTo(x + carrier.w / 2 + 20, y + 35);
+    ctx.fill();
+    ctx.fillStyle = "#d9eff2";
+    ctx.beginPath();
+    ctx.ellipse(x + carrier.w / 2 - 8, y + 45, 4, 7, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + carrier.w / 2 + 8, y + 45, 4, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#eee8db";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x + carrier.w / 2, y + 53);
+    ctx.lineTo(x + carrier.w / 2 - 24, y + 48);
+    ctx.moveTo(x + carrier.w / 2, y + 53);
+    ctx.lineTo(x + carrier.w / 2 + 24, y + 48);
+    ctx.stroke();
+    ctx.restore();
+
     ctx.fillStyle = "#b97b54";
     roundRect(x + 20, y + 24 - (1 - slam) * 40, carrier.w - 40, carrier.h - 26, 8, true);
     ctx.strokeStyle = "#4c3129";
@@ -916,14 +942,17 @@ function drawCarrier(coverPlayer) {
       ctx.stroke();
     }
     if (finale && finale.time > 0.65) {
+      const reach = Math.min(1, (finale.time - 0.65) / 0.55);
+      const leftStart = x - 170 + reach * 150;
+      const rightStart = x + carrier.w + 170 - reach * 150;
       ctx.strokeStyle = "#f1d8bd";
       ctx.lineWidth = 13;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(x - 20, y + 20);
-      ctx.quadraticCurveTo(x - 58, y - 12, x - 82, y + 28);
-      ctx.moveTo(x + carrier.w + 20, y + 20);
-      ctx.quadraticCurveTo(x + carrier.w + 58, y - 12, x + carrier.w + 82, y + 28);
+      ctx.moveTo(leftStart, y + 28);
+      ctx.quadraticCurveTo(x - 58, y - 12, x - 20, y + 20);
+      ctx.moveTo(rightStart, y + 28);
+      ctx.quadraticCurveTo(x + carrier.w + 58, y - 12, x + carrier.w + 20, y + 20);
       ctx.stroke();
     }
   }
