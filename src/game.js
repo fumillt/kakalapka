@@ -12,6 +12,7 @@ const winText = document.querySelector("#winText");
 const startButton = document.querySelector("#startButton");
 const restartButton = document.querySelector("#restartButton");
 const markButton = document.querySelector(".touch-button.mark");
+const jumpButton = document.querySelector(".touch-button.jump");
 const touchButtons = document.querySelectorAll(".touch-button");
 const telegram = window.Telegram?.WebApp;
 
@@ -46,6 +47,7 @@ const objectSprites = {
   bed: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6cf.svg"),
   water: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f963.svg"),
   vet: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f3e5.svg"),
+  carrier: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f9fa.svg"),
 };
 
 for (const image of document.querySelectorAll("[data-kakalapka-image]")) {
@@ -69,6 +71,10 @@ let cameraY = 0;
 let particles = [];
 let stains = [];
 let waterStations = [];
+let furniture = [];
+let curtains = [];
+let carrier = null;
+let finale = null;
 let currentLevelIndex = 0;
 let targets = [];
 let actionMode = "pee";
@@ -130,8 +136,11 @@ const player = {
   grounded: false,
   coyote: 0,
   jumpBuffer: 0,
+  jumpsLeft: 2,
+  onCurtain: null,
   sass: 100,
   stateTime: 0,
+  locked: false,
 };
 
 const defaultRooms = [
@@ -143,17 +152,21 @@ const defaultRooms = [
 
 const defaultPlatforms = [
   { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
-  { x: 96, y: 566, w: 230, h: 32, type: "shoe-rack" },
-  { x: 410, y: 470, w: 220, h: 28, type: "shelf" },
-  { x: 768, y: 590, w: 180, h: 26, type: "threshold" },
-  { x: 930, y: 540, w: 190, h: 26, type: "bath-cabinet" },
-  { x: 1210, y: 432, w: 210, h: 26, type: "toilet" },
-  { x: 1510, y: 560, w: 185, h: 26, type: "hamper" },
-  { x: 1740, y: 552, w: 250, h: 30, type: "counter" },
-  { x: 2108, y: 456, w: 250, h: 28, type: "table" },
-  { x: 2408, y: 592, w: 180, h: 26, type: "chair" },
-  { x: 2640, y: 550, w: 350, h: 36, type: "sofa" },
-  { x: 3048, y: 452, w: 180, h: 28, type: "tv-stand" },
+  { x: 540, y: 495, w: 260, h: 26, type: "shelf" },
+  { x: 1190, y: 455, w: 230, h: 26, type: "shelf" },
+  { x: 2140, y: 485, w: 270, h: 26, type: "shelf" },
+];
+
+const defaultFurniture = [
+  { x: 820, y: FLOOR_Y - 68, w: 310, h: 68, type: "sofa" },
+  { x: 1680, y: FLOOR_Y - 92, w: 260, h: 92, type: "counter" },
+  { x: 2590, y: FLOOR_Y - 74, w: 360, h: 74, type: "bed" },
+  { x: 3060, y: FLOOR_Y - 118, w: 120, h: 118, type: "tv" },
+];
+
+const defaultCurtains = [
+  { x: 1480, y: 92, w: 95, h: FLOOR_Y - 92, name: "штора в ванной" },
+  { x: 2860, y: 92, w: 105, h: FLOOR_Y - 92, name: "штора у окна" },
 ];
 
 let rooms = defaultRooms.map((room) => ({ ...room }));
@@ -161,49 +174,83 @@ let platforms = defaultPlatforms.map((platform) => ({ ...platform }));
 
 const levels = [
   {
-    title: "Уровень 1: домашний рейд",
-    intro: "Какалапочка вышла на рейд",
-    win: "Дом захвачен",
+    title: "Уровень 1: прихожая и ванная",
+    intro: "Рейд начался. Попей воды перед домашним хаосом",
+    win: "Первый домовой обход завершен",
     playerStart: { x: 110, y: FLOOR_Y - 54 },
     rooms: defaultRooms,
-    platforms: defaultPlatforms,
-    waterStations: [{ x: 142, y: FLOOR_Y - 46, w: 58, h: 38, name: "миска с водой" }],
+    platforms: [
+      { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
+      { x: 620, y: 500, w: 250, h: 26, type: "shelf" },
+      { x: 1410, y: 440, w: 260, h: 26, type: "shelf" },
+      { x: 2420, y: 482, w: 270, h: 26, type: "shelf" },
+    ],
+    furniture: [
+      { x: 520, y: FLOOR_Y - 52, w: 220, h: 52, type: "shoe-rack" },
+      { x: 900, y: FLOOR_Y - 72, w: 330, h: 72, type: "sofa" },
+      { x: 1760, y: FLOOR_Y - 95, w: 280, h: 95, type: "counter" },
+      { x: 2860, y: FLOOR_Y - 112, w: 130, h: 112, type: "tv" },
+    ],
+    curtains: [
+      { x: 1320, y: 92, w: 105, h: FLOOR_Y - 92, name: "мокрая штора" },
+      { x: 2700, y: 92, w: 105, h: FLOOR_Y - 92, name: "штора у окна" },
+    ],
+    waterStations: [{ x: 220, y: FLOOR_Y - 46, w: 58, h: 38, name: "миска с водой" }],
     targets: [
-      { x: 260, y: 520, w: 52, h: 42, name: "тапок хозяина", icon: "shoe", marked: false },
-      { x: 560, y: 420, w: 54, h: 48, name: "коробка у двери", icon: "box", marked: false },
-      { x: 1032, y: 493, w: 62, h: 45, name: "бирюзовая тумба", icon: "cabinet", marked: false },
-      { x: 1328, y: 360, w: 74, h: 62, name: "трон в ванной", icon: "toilet", marked: false },
-      { x: 1600, y: 510, w: 66, h: 48, name: "пакет наполнителя", icon: "bag", marked: false },
-      { x: 1880, y: 506, w: 48, h: 42, name: "миска с едой", icon: "bowl", marked: false },
-      { x: 2248, y: 404, w: 64, h: 48, name: "чайник", icon: "kettle", marked: false },
-      { x: 2784, y: 500, w: 70, h: 48, name: "диванная подушка", icon: "pillow", marked: false },
-      { x: 3140, y: 392, w: 70, h: 56, name: "телевизор", icon: "tv", marked: false },
+      { x: 340, y: FLOOR_Y - 46, w: 54, h: 42, name: "миска с едой", icon: "bowl", marked: false },
+      { x: 520, y: FLOOR_Y - 46, w: 54, h: 42, name: "тапок хозяина", icon: "shoe", marked: false },
+      { x: 780, y: 452, w: 56, h: 46, name: "ключи на полке", icon: "box", marked: false },
+      { x: 1040, y: FLOOR_Y - 48, w: 76, h: 48, name: "диванная подушка", icon: "pillow", marked: false },
+      { x: 1500, y: 390, w: 70, h: 52, name: "банка на высокой полке", icon: "cabinet", marked: false },
+      { x: 1910, y: FLOOR_Y - 56, w: 72, h: 54, name: "пакет наполнителя", icon: "bag", marked: false },
+      { x: 2520, y: 435, w: 68, h: 48, name: "чайник на полке", icon: "kettle", marked: false },
+      { x: 2900, y: FLOOR_Y - 58, w: 74, h: 56, name: "телевизор", icon: "tv", marked: false },
     ],
   },
   {
     title: "Уровень 2: все кроссовки в доме",
-    intro: "Найди и пометь каждую пару кроссовок",
+    intro: "Кроссовки расставлены слишком самоуверенно",
     win: "Кроссовочный террор завершен",
     playerStart: { x: 110, y: FLOOR_Y - 54 },
-    rooms: defaultRooms,
-    platforms: defaultPlatforms,
-    waterStations: [{ x: 1880, y: 506, w: 58, h: 38, name: "миска с водой" }],
+    rooms: [
+      { x: 0, w: 830, name: "прихожая", wall: "#b1beb8", trim: "#71665b" },
+      { x: 830, w: 820, name: "гардероб", wall: "#d8cec0", trim: "#806550" },
+      { x: 1650, w: 820, name: "кухня", wall: "#ead9bf", trim: "#c97958" },
+      { x: 2470, w: 830, name: "комната", wall: "#b9adc8", trim: "#6c587b" },
+    ],
+    platforms: [
+      { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
+      { x: 760, y: 492, w: 270, h: 26, type: "shelf" },
+      { x: 1540, y: 448, w: 240, h: 26, type: "shelf" },
+      { x: 2300, y: 498, w: 300, h: 26, type: "shelf" },
+    ],
+    furniture: [
+      { x: 520, y: FLOOR_Y - 58, w: 260, h: 58, type: "shoe-rack" },
+      { x: 1080, y: FLOOR_Y - 90, w: 260, h: 90, type: "cabinet" },
+      { x: 1880, y: FLOOR_Y - 70, w: 320, h: 70, type: "sofa" },
+      { x: 2760, y: FLOOR_Y - 74, w: 340, h: 74, type: "bed" },
+    ],
+    curtains: [
+      { x: 1440, y: 92, w: 100, h: FLOOR_Y - 92, name: "гардеробная штора" },
+      { x: 2580, y: 92, w: 105, h: FLOOR_Y - 92, name: "фиолетовая штора" },
+    ],
+    waterStations: [{ x: 220, y: FLOOR_Y - 46, w: 58, h: 38, name: "миска с водой" }],
     targets: [
-      { x: 250, y: 520, w: 52, h: 42, name: "кроссовки у входа", icon: "shoe", marked: false },
-      { x: 500, y: 424, w: 52, h: 42, name: "кроссовки на полке", icon: "shoe", marked: false },
-      { x: 842, y: 546, w: 52, h: 42, name: "кроссовки у ванной", icon: "shoe", marked: false },
-      { x: 1058, y: 494, w: 52, h: 42, name: "кроссовки под тумбой", icon: "shoe", marked: false },
-      { x: 1578, y: 514, w: 52, h: 42, name: "кроссовки возле наполнителя", icon: "shoe", marked: false },
-      { x: 2188, y: 410, w: 52, h: 42, name: "кроссовки на столе", icon: "shoe", marked: false },
-      { x: 2470, y: 546, w: 52, h: 42, name: "кроссовки у стула", icon: "shoe", marked: false },
-      { x: 2800, y: 504, w: 52, h: 42, name: "кроссовки на диване", icon: "shoe", marked: false },
-      { x: 3140, y: 406, w: 52, h: 42, name: "кроссовки у телевизора", icon: "shoe", marked: false },
+      { x: 340, y: FLOOR_Y - 46, w: 54, h: 42, name: "миска с едой", icon: "bowl", marked: false },
+      { x: 470, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки у входа", icon: "shoe", marked: false },
+      { x: 650, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки под лавкой", icon: "shoe", marked: false },
+      { x: 880, y: 444, w: 54, h: 42, name: "кроссовки на полке", icon: "shoe", marked: false },
+      { x: 1220, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки у шкафа", icon: "shoe", marked: false },
+      { x: 1660, y: 400, w: 54, h: 42, name: "кроссовки наверху", icon: "shoe", marked: false },
+      { x: 2040, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки у дивана", icon: "shoe", marked: false },
+      { x: 2430, y: 450, w: 54, h: 42, name: "кроссовки на дальней полке", icon: "shoe", marked: false },
+      { x: 2910, y: FLOOR_Y - 46, w: 54, h: 42, name: "кроссовки под кроватью", icon: "shoe", marked: false },
     ],
   },
   {
-    title: "Уровень 3: ковры и кровати",
-    intro: "Мягкое должно стать подозрительным",
-    win: "Спальня потеряла невинность",
+    title: "Уровень 3: спальня и переноска",
+    intro: "Финальный домашний рейд. Переноска пока закрыта для легенд",
+    win: "Какалапочку поймали",
     playerStart: { x: 110, y: FLOOR_Y - 54 },
     rooms: [
       { x: 0, w: 830, name: "коридор", wall: "#b7c6bf", trim: "#6d6a5d" },
@@ -213,58 +260,38 @@ const levels = [
     ],
     platforms: [
       { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
-      { x: 160, y: 568, w: 250, h: 30, type: "rug" },
-      { x: 560, y: 500, w: 260, h: 30, type: "bed" },
-      { x: 980, y: 432, w: 260, h: 28, type: "bed" },
-      { x: 1380, y: 530, w: 230, h: 28, type: "shelf" },
-      { x: 1780, y: 470, w: 270, h: 30, type: "sofa" },
-      { x: 2200, y: 560, w: 230, h: 28, type: "rug" },
-      { x: 2620, y: 490, w: 260, h: 30, type: "bed" },
-      { x: 3000, y: 420, w: 220, h: 28, type: "shelf" },
+      { x: 900, y: 485, w: 260, h: 26, type: "shelf" },
+      { x: 1740, y: 445, w: 260, h: 26, type: "shelf" },
+      { x: 2600, y: 496, w: 260, h: 26, type: "shelf" },
     ],
-    waterStations: [{ x: 1460, y: 486, w: 58, h: 38, name: "миска с водой" }],
+    furniture: [
+      { x: 330, y: FLOOR_Y - 42, w: 330, h: 42, type: "rug" },
+      { x: 690, y: FLOOR_Y - 86, w: 410, h: 86, type: "bed" },
+      { x: 1350, y: FLOOR_Y - 72, w: 360, h: 72, type: "sofa" },
+      { x: 2170, y: FLOOR_Y - 44, w: 340, h: 44, type: "rug" },
+      { x: 2900, y: FLOOR_Y - 88, w: 220, h: 88, type: "cabinet" },
+    ],
+    curtains: [
+      { x: 1210, y: 92, w: 105, h: FLOOR_Y - 92, name: "спальная штора" },
+      { x: 2520, y: 92, w: 105, h: FLOOR_Y - 92, name: "штора у лежанки" },
+    ],
+    waterStations: [{ x: 220, y: FLOOR_Y - 46, w: 58, h: 38, name: "миска с водой" }],
+    carrier: { x: 3100, y: FLOOR_Y - 76, w: 112, h: 76, name: "переноска" },
     targets: [
-      { x: 230, y: 520, w: 76, h: 48, name: "коврик у двери", icon: "pillow", marked: false },
-      { x: 640, y: 448, w: 78, h: 54, name: "кровать хозяев", icon: "bed", marked: false },
-      { x: 1070, y: 380, w: 78, h: 54, name: "подушка на кровати", icon: "pillow", marked: false },
-      { x: 1440, y: 478, w: 70, h: 50, name: "плед", icon: "clothes", marked: false },
-      { x: 1860, y: 418, w: 82, h: 54, name: "диван", icon: "couch", marked: false },
-      { x: 2280, y: 512, w: 76, h: 48, name: "ковер в гостиной", icon: "pillow", marked: false },
-      { x: 2710, y: 438, w: 78, h: 54, name: "гостевая кровать", icon: "bed", marked: false },
-      { x: 3060, y: 368, w: 70, h: 50, name: "последняя подушка", icon: "pillow", marked: false },
+      { x: 340, y: FLOOR_Y - 46, w: 54, h: 42, name: "миска с едой", icon: "bowl", marked: false },
+      { x: 420, y: FLOOR_Y - 50, w: 82, h: 48, name: "коврик у двери", icon: "pillow", marked: false },
+      { x: 850, y: FLOOR_Y - 54, w: 82, h: 54, name: "кровать хозяев", icon: "bed", marked: false },
+      { x: 1000, y: 432, w: 72, h: 50, name: "подушка на полке", icon: "pillow", marked: false },
+      { x: 1500, y: FLOOR_Y - 52, w: 82, h: 52, name: "диван", icon: "couch", marked: false },
+      { x: 1860, y: 392, w: 72, h: 50, name: "плед наверху", icon: "clothes", marked: false },
+      { x: 2310, y: FLOOR_Y - 50, w: 82, h: 48, name: "ковер в гостиной", icon: "pillow", marked: false },
+      { x: 2700, y: 444, w: 72, h: 50, name: "последняя подушка", icon: "pillow", marked: false },
     ],
   },
 ];
 
-const vetLevel = {
-  title: "Финал: ветеринар",
-  intro: "Какалапочка попала к ветеринару. Рейд окончен",
-  win: "Ветеринар озадачен",
-  isFinal: true,
-  playerStart: { x: 170, y: FLOOR_Y - 54 },
-  rooms: [
-    { x: 0, w: 1100, name: "приёмная", wall: "#d8e4df", trim: "#6e8c82" },
-    { x: 1100, w: 1100, name: "кабинет", wall: "#d6e4ec", trim: "#5c7d92" },
-    { x: 2200, w: 1100, name: "стол осмотра", wall: "#e7ded2", trim: "#8d765c" },
-  ],
-  platforms: [
-    { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
-    { x: 520, y: 560, w: 260, h: 30, type: "table" },
-    { x: 1120, y: 500, w: 320, h: 30, type: "counter" },
-    { x: 1780, y: 455, w: 300, h: 30, type: "table" },
-    { x: 2420, y: 525, w: 360, h: 30, type: "vet" },
-  ],
-  waterStations: [],
-  targets: [
-    { x: 620, y: 506, w: 72, h: 52, name: "переноска", icon: "box", marked: false },
-    { x: 1240, y: 446, w: 72, h: 52, name: "шкафчик с лекарствами", icon: "cabinet", marked: false },
-    { x: 1880, y: 402, w: 72, h: 52, name: "ноутбук ветеринара", icon: "laptop", marked: false },
-    { x: 2530, y: 472, w: 78, h: 56, name: "стол осмотра", icon: "vet", marked: false },
-  ],
-};
-
 function getLevel(index) {
-  return levels[index] || vetLevel;
+  return levels[clamp(index, 0, levels.length - 1)];
 }
 
 targets = getLevel(0).targets.map((target) => ({ ...target, marked: false }));
@@ -278,13 +305,25 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function isLastLevel() {
+  return currentLevelIndex === levels.length - 1;
+}
+
+function allTargetsMarked() {
+  return targets.length > 0 && targets.every((target) => target.marked);
+}
+
 function resetGame(levelIndex = currentLevelIndex) {
-  currentLevelIndex = Math.max(0, levelIndex);
+  currentLevelIndex = clamp(levelIndex, 0, levels.length - 1);
   const level = getLevel(currentLevelIndex);
   rooms = (level.rooms || defaultRooms).map((room) => ({ ...room }));
   platforms = (level.platforms || defaultPlatforms).map((platform) => ({ ...platform }));
   targets = level.targets.map((target) => ({ ...target, marked: false }));
   waterStations = (level.waterStations || []).map((station) => ({ ...station }));
+  furniture = (level.furniture || defaultFurniture).map((item) => ({ ...item }));
+  curtains = (level.curtains || defaultCurtains).map((curtain) => ({ ...curtain }));
+  carrier = level.carrier ? { ...level.carrier, open: false, caught: false } : null;
+  finale = null;
   player.x = level.playerStart?.x ?? 110;
   player.y = level.playerStart?.y ?? FLOOR_Y - player.h;
   player.vx = 0;
@@ -293,8 +332,11 @@ function resetGame(levelIndex = currentLevelIndex) {
   player.grounded = false;
   player.coyote = 0;
   player.jumpBuffer = 0;
-  player.sass = level.isFinal ? 100 : 65;
+  player.jumpsLeft = 2;
+  player.onCurtain = null;
+  player.sass = 50;
   player.stateTime = 0;
+  player.locked = false;
   cameraX = 0;
   cameraY = 0;
   particles = [];
@@ -323,13 +365,13 @@ function updateHud() {
 }
 
 function markTarget(target) {
-  if (!target || target.marked || player.sass < 12) {
-    setStatus("Мочи не хватает. Найди миску с водой");
+  if (!target || target.marked || player.sass < 8) {
+    setStatus("Мочи не хватает. Экономь рейдовый ресурс");
     return;
   }
 
   target.marked = true;
-  player.sass = clamp(player.sass - 12, 0, 100);
+  player.sass = clamp(player.sass - 8, 0, 100);
   stains.push({
     x: target.x + target.w / 2,
     y: target.y + target.h - 4,
@@ -354,7 +396,12 @@ function markTarget(target) {
 
   const marked = targets.filter((item) => item.marked).length;
   if (marked === targets.length) {
-    winGame();
+    if (isLastLevel() && carrier) {
+      carrier.open = true;
+      setStatus("Все помечено. Прыгай в переноску, пока люди ничего не поняли");
+    } else {
+      winGame();
+    }
   }
 }
 
@@ -391,17 +438,19 @@ function drinkWater(station) {
   updateHud();
 }
 
-function winGame() {
+function winGame(final = false) {
   won = true;
   running = false;
   document.querySelector(".game-wrap")?.classList.remove("is-playing");
   document.querySelector(".shell")?.classList.remove("is-playing");
   const level = getLevel(currentLevelIndex);
-  winTitle.textContent = level.win;
-  winText.textContent = `${level.win}. Обоссано целей: ${targets.length}. Какалапочка торжественно делает вид, что ничего не произошло.`;
-  restartButton.textContent = "Следующий уровень";
+  winTitle.textContent = final ? "Рейд завершен" : level.win;
+  winText.textContent = final
+    ? "Все предметы помечены, переноска захлопнулась, и Какалапочку унесли. Дорога к ветеринару будет в следующем обновлении."
+    : `${level.win}. Обоссано целей: ${targets.length}. Какалапочка торжественно делает вид, что ничего не произошло.`;
+  restartButton.textContent = final ? "Начать заново" : "Следующий уровень";
   if (telegram?.MainButton) {
-    telegram.MainButton.setText("Следующий уровень");
+    telegram.MainButton.setText(final ? "Начать заново" : "Следующий уровень");
     telegram.MainButton.show();
   }
   setTimeout(() => winOverlay.classList.add("is-visible"), 400);
@@ -409,9 +458,9 @@ function winGame() {
 
 function getNearbyTarget() {
   const reach = {
-    x: player.x - 24,
+    x: player.x - 46,
     y: player.y - 16,
-    w: player.w + 48,
+    w: player.w + 92,
     h: player.h + 34,
   };
   return targets.find((target) => !target.marked && rectsOverlap(reach, target));
@@ -427,19 +476,54 @@ function getNearbyWater() {
   return waterStations.find((station) => rectsOverlap(reach, station));
 }
 
+function getNearbyCurtain() {
+  const body = {
+    x: player.x + 10,
+    y: player.y + 2,
+    w: player.w - 20,
+    h: player.h - 4,
+  };
+  return curtains.find((curtain) => rectsOverlap(body, curtain));
+}
+
+function getNearbyCarrier() {
+  if (!carrier) return null;
+  const door = {
+    x: carrier.x - 12,
+    y: carrier.y - 8,
+    w: carrier.w + 24,
+    h: carrier.h + 18,
+  };
+  return rectsOverlap(player, door) ? carrier : null;
+}
+
 function updateActionState() {
   const water = getNearbyWater();
   const target = getNearbyTarget();
+  const nearCarrier = getNearbyCarrier();
   actionMode = water ? "drink" : "pee";
   if (markButton) {
     markButton.textContent = water ? "Пить" : "Обоссать";
     markButton.setAttribute("aria-label", water ? "Пить воду" : "Обоссать предмет");
     markButton.classList.toggle("is-drink", Boolean(water));
   }
+  if (jumpButton) {
+    const climbing = Boolean(player.onCurtain);
+    jumpButton.textContent = climbing ? "Ползти" : "Прыг";
+    jumpButton.setAttribute("aria-label", climbing ? "Ползти по шторе" : "Прыгнуть");
+  }
+  if (finale) {
+    setStatus("Переноска захлопнулась. Миссия выполнена");
+    return;
+  }
   if (water) {
     setStatus(`Пить: ${water.name}`);
+  } else if (nearCarrier && isLastLevel()) {
+    setStatus(allTargetsMarked() ? "Переноска открыта. Запрыгивай" : "Сначала обоссать все предметы");
   } else if (target) {
     setStatus(`Обоссать: ${target.name}`);
+  } else if (player.onCurtain) {
+    setStatus(`Зажми «Ползти»: ${player.onCurtain.name}`);
   } else {
     setStatus("Можно обоссать предмет или сделать лужу");
   }
@@ -459,10 +543,39 @@ function useAction() {
   }
 }
 
+function triggerCarrierFinale() {
+  if (!carrier || finale || !allTargetsMarked()) return;
+  carrier.open = false;
+  carrier.caught = true;
+  player.locked = true;
+  player.vx = 0;
+  player.vy = 0;
+  player.x = carrier.x + 18;
+  player.y = carrier.y + carrier.h - player.h;
+  finale = { time: 0 };
+  setStatus("Переноска захлопнулась. Миссия выполнена");
+  haptic("action");
+}
+
+function updateFinale(dt) {
+  if (!finale) return;
+  finale.time += dt;
+  if (carrier && finale.time > 0.75) {
+    carrier.lift = Math.min(96, (finale.time - 0.75) * 92);
+  }
+  if (finale.time > 2.15 && !won) {
+    winGame(true);
+  }
+}
+
 function updatePlayer(dt) {
+  if (player.locked) return;
+
   const left = keys.has("arrowleft") || keys.has("a") || keys.has("ф");
   const right = keys.has("arrowright") || keys.has("d") || keys.has("в");
   const jumpHeld = keys.has("arrowup") || keys.has("w") || keys.has("ц") || keys.has(" ");
+  const jumpPressed = justPressed.has(" ") || justPressed.has("arrowup") || justPressed.has("w") || justPressed.has("ц");
+  player.onCurtain = getNearbyCurtain();
 
   const accel = player.grounded ? 4200 : 2600;
   const maxSpeed = 390;
@@ -482,24 +595,33 @@ function updatePlayer(dt) {
   }
 
   player.vx = clamp(player.vx, -maxSpeed, maxSpeed);
-  player.vy += WORLD.gravity * dt;
+  if (player.onCurtain) {
+    player.vx *= 0.9;
+    player.vy = jumpHeld ? -290 : clamp(player.vy + 900 * dt, -80, 130);
+    player.coyote = 0.08;
+  } else {
+    player.vy += WORLD.gravity * dt;
+  }
   player.coyote -= dt;
   player.jumpBuffer -= dt;
   player.stateTime += dt;
 
-  if (justPressed.has(" ") || justPressed.has("arrowup") || justPressed.has("w") || justPressed.has("ц")) {
+  if (jumpPressed && !player.onCurtain) {
     player.jumpBuffer = 0.12;
   }
 
-  if (player.jumpBuffer > 0 && player.coyote > 0) {
+  const canGroundJump = player.coyote > 0;
+  const canAirJump = !player.grounded && player.jumpsLeft > 0;
+  if (player.jumpBuffer > 0 && (canGroundJump || canAirJump)) {
     player.vy = -760;
     player.grounded = false;
     player.coyote = 0;
     player.jumpBuffer = 0;
-    setStatus("мяв-прыжок");
+    player.jumpsLeft = canGroundJump ? 1 : Math.max(0, player.jumpsLeft - 1);
+    setStatus(canGroundJump ? "мяв-прыжок" : "двойной мяв-прыжок");
   }
 
-  if (!jumpHeld && player.vy < -220) {
+  if (!jumpHeld && !player.onCurtain && player.vy < -220) {
     player.vy = -220;
   }
 
@@ -535,6 +657,7 @@ function moveAndCollide(dt) {
       player.vy = 0;
       player.grounded = true;
       player.coyote = 0.1;
+      player.jumpsLeft = 2;
     } else if (player.vy < 0 && platform.type !== "floor") {
       player.y = platform.y + platform.h;
       player.vy = 0;
@@ -567,6 +690,7 @@ function update(dt) {
   if (!running) return;
 
   updatePlayer(dt);
+  updateFinale(dt);
   updateParticles(dt);
 
   resizeCanvasToDisplay();
@@ -577,6 +701,10 @@ function update(dt) {
   );
   cameraX += (targetCameraX - cameraX) * Math.min(1, dt * 7.5);
   cameraY = 0;
+
+  if (carrier && allTargetsMarked() && getNearbyCarrier()) {
+    triggerCarrierFinale();
+  }
 
   updateActionState();
   updateHud();
@@ -590,11 +718,15 @@ function draw() {
   ctx.translate(-Math.round(cameraX), -Math.round(cameraY));
 
   drawWorld();
+  drawCurtains();
+  drawFurniture();
   drawStains();
   drawWaterStations();
   drawTargets();
   drawPlatforms();
+  drawCarrier(false);
   drawPlayer();
+  drawCarrier(true);
   drawParticles();
 
   ctx.restore();
@@ -636,23 +768,166 @@ function drawWorld() {
 function drawWaterStations() {
   for (const station of waterStations) {
     ctx.save();
-    const sprite = objectSprites.water;
     ctx.fillStyle = "rgba(147, 219, 255, 0.86)";
     roundRect(station.x - 8, station.y - 8, station.w + 16, station.h + 16, 12, true, true);
-    if (sprite?.complete && sprite.naturalWidth > 0) {
-      ctx.drawImage(sprite, station.x, station.y - 4, station.w, station.h + 8);
-    } else {
-      ctx.fillStyle = "#65c9ff";
-      ctx.beginPath();
-      ctx.ellipse(station.x + station.w / 2, station.y + station.h / 2, station.w / 2, station.h / 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.fillStyle = "#4eb3e8";
+    roundRect(station.x + 2, station.y + 18, station.w - 4, 18, 12, true, true);
+    ctx.fillStyle = "#d9f6ff";
+    ctx.beginPath();
+    ctx.ellipse(station.x + station.w / 2, station.y + 22, station.w * 0.34, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#1f7aa3";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(station.x + station.w - 10, station.y + 14);
+    ctx.lineTo(station.x + station.w + 12, station.y + 4);
+    ctx.stroke();
     ctx.fillStyle = "#d9f6ff";
     ctx.beginPath();
     ctx.arc(station.x + station.w / 2, station.y - 13, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
+}
+
+function drawCurtains() {
+  for (const curtain of curtains) {
+    const wave = Math.sin(performance.now() / 420 + curtain.x * 0.01) * 5;
+    ctx.save();
+    ctx.fillStyle = "#d7edf3";
+    roundRect(curtain.x + 10, curtain.y + 34, curtain.w - 20, 160, 8, true, true);
+    ctx.fillStyle = "#9ec4d2";
+    ctx.fillRect(curtain.x + 22, curtain.y + 46, curtain.w - 44, 124);
+    ctx.strokeStyle = "rgba(35, 54, 61, 0.28)";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(curtain.x + 22, curtain.y + 46, curtain.w - 44, 124);
+
+    ctx.fillStyle = "#6f4d7f";
+    ctx.fillRect(curtain.x - 10, curtain.y + 24, curtain.w + 20, 14);
+    ctx.fillStyle = "rgba(117, 63, 93, 0.9)";
+    ctx.beginPath();
+    ctx.moveTo(curtain.x, curtain.y + 32);
+    ctx.bezierCurveTo(curtain.x + 18 + wave, curtain.y + 175, curtain.x - 8 - wave, curtain.y + 360, curtain.x + 18, curtain.y + curtain.h);
+    ctx.lineTo(curtain.x + curtain.w - 12, curtain.y + curtain.h);
+    ctx.bezierCurveTo(
+      curtain.x + curtain.w + 12 - wave,
+      curtain.y + 360,
+      curtain.x + curtain.w - 18 + wave,
+      curtain.y + 175,
+      curtain.x + curtain.w,
+      curtain.y + 32,
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 235, 220, 0.26)";
+    ctx.lineWidth = 3;
+    for (let x = curtain.x + 18; x < curtain.x + curtain.w; x += 22) {
+      ctx.beginPath();
+      ctx.moveTo(x + Math.sin(x) * 2, curtain.y + 45);
+      ctx.bezierCurveTo(x - 12, curtain.y + 210, x + 10, curtain.y + 420, x - 4, curtain.y + curtain.h - 12);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawFurniture() {
+  for (const item of furniture) {
+    ctx.save();
+    if (item.type === "sofa") {
+      ctx.fillStyle = "#77609a";
+      roundRect(item.x, item.y + 18, item.w, item.h - 18, 14, true);
+      ctx.fillStyle = "#9b85bd";
+      roundRect(item.x + 24, item.y, item.w - 48, 44, 12, true);
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.fillRect(item.x + 18, item.y + item.h, item.w - 36, 10);
+    } else if (item.type === "bed") {
+      ctx.fillStyle = "#d6b59c";
+      roundRect(item.x, item.y + 22, item.w, item.h - 22, 10, true);
+      ctx.fillStyle = "#e9ddd1";
+      roundRect(item.x + 18, item.y, item.w - 36, 42, 10, true);
+      ctx.fillStyle = "#9eb7cf";
+      roundRect(item.x + 34, item.y + 8, 70, 28, 8, true);
+    } else if (item.type === "rug") {
+      ctx.fillStyle = "#b85d66";
+      roundRect(item.x, item.y + 8, item.w, item.h - 8, 24, true);
+      ctx.fillStyle = "rgba(255,255,255,0.22)";
+      roundRect(item.x + 34, item.y + 18, item.w - 68, 10, 5, true);
+    } else if (item.type === "counter" || item.type === "cabinet") {
+      ctx.fillStyle = item.type === "counter" ? "#76b7b0" : "#8a705e";
+      roundRect(item.x, item.y, item.w, item.h, 8, true);
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.fillRect(item.x + 16, item.y + 20, item.w - 32, 8);
+    } else if (item.type === "shoe-rack") {
+      ctx.fillStyle = "#6d5142";
+      roundRect(item.x, item.y + 10, item.w, item.h - 10, 8, true);
+      ctx.fillStyle = "#a77855";
+      ctx.fillRect(item.x + 12, item.y + 18, item.w - 24, 8);
+    } else if (item.type === "tv") {
+      ctx.fillStyle = "#17191d";
+      roundRect(item.x, item.y, item.w, item.h, 8, true);
+      ctx.fillStyle = "#273942";
+      ctx.fillRect(item.x + 12, item.y + 12, item.w - 24, item.h - 34);
+    }
+    ctx.restore();
+  }
+}
+
+function drawCarrier(coverPlayer) {
+  if (!carrier) return;
+  const lift = carrier.lift || 0;
+  const x = carrier.x;
+  const y = carrier.y - lift;
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.beginPath();
+  ctx.ellipse(x + carrier.w / 2, carrier.y + carrier.h + 8, carrier.w * 0.55, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (!coverPlayer) {
+    ctx.fillStyle = carrier.open ? "#f0c58e" : "#c98d62";
+    roundRect(x, y + 16, carrier.w, carrier.h - 8, 12, true, true);
+    ctx.fillStyle = "#3d2d28";
+    roundRect(x + 22, y + 28, carrier.w - 44, carrier.h - 30, 8, true);
+    if (carrier.open) {
+      ctx.fillStyle = "#1c1513";
+      roundRect(x + 28, y + 34, carrier.w - 56, carrier.h - 38, 6, true);
+    }
+    ctx.strokeStyle = "#5a392f";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(x + carrier.w / 2, y + 18, 28, Math.PI, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  if (coverPlayer && carrier.caught) {
+    const slam = Math.min(1, finale ? finale.time / 0.4 : 1);
+    ctx.fillStyle = "#b97b54";
+    roundRect(x + 20, y + 24 - (1 - slam) * 40, carrier.w - 40, carrier.h - 26, 8, true);
+    ctx.strokeStyle = "#4c3129";
+    ctx.lineWidth = 5;
+    roundRect(x + 20, y + 24 - (1 - slam) * 40, carrier.w - 40, carrier.h - 26, 8, false, true);
+    ctx.strokeStyle = "#e4cdb7";
+    ctx.lineWidth = 4;
+    for (let bar = x + 36; bar < x + carrier.w - 28; bar += 18) {
+      ctx.beginPath();
+      ctx.moveTo(bar, y + 30);
+      ctx.lineTo(bar, y + carrier.h - 8);
+      ctx.stroke();
+    }
+    if (finale && finale.time > 0.65) {
+      ctx.strokeStyle = "#f1d8bd";
+      ctx.lineWidth = 13;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(x - 20, y + 20);
+      ctx.quadraticCurveTo(x - 58, y - 12, x - 82, y + 28);
+      ctx.moveTo(x + carrier.w + 20, y + 20);
+      ctx.quadraticCurveTo(x + carrier.w + 58, y - 12, x + carrier.w + 82, y + 28);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
 }
 
 function drawPlatforms() {
@@ -958,12 +1233,12 @@ window.addEventListener("keyup", (event) => {
 
 startButton.addEventListener("click", () => resetGame(0));
 restartButton.addEventListener("click", () => {
-  resetGame(currentLevelIndex + 1);
+  resetGame(won && currentLevelIndex === levels.length - 1 ? 0 : currentLevelIndex + 1);
 });
 
 if (telegram?.MainButton) {
   telegram.MainButton.onClick(() => {
-    resetGame(currentLevelIndex + 1);
+    resetGame(won && currentLevelIndex === levels.length - 1 ? 0 : currentLevelIndex + 1);
     telegram.MainButton.hide();
   });
 }
