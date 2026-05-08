@@ -11,6 +11,7 @@ const winTitle = document.querySelector("#winTitle");
 const winText = document.querySelector("#winText");
 const startButton = document.querySelector("#startButton");
 const restartButton = document.querySelector("#restartButton");
+const markButton = document.querySelector(".touch-button.mark");
 const touchButtons = document.querySelectorAll(".touch-button");
 const telegram = window.Telegram?.WebApp;
 
@@ -42,6 +43,9 @@ const objectSprites = {
   clothes: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f456.svg"),
   laptop: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4bb.svg"),
   bathtub: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6c1.svg"),
+  bed: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6cf.svg"),
+  water: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f963.svg"),
+  vet: loadImage("https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f3e5.svg"),
 };
 
 for (const image of document.querySelectorAll("[data-kakalapka-image]")) {
@@ -52,6 +56,7 @@ for (const image of document.querySelectorAll("[data-kakalapka-image]")) {
 }
 
 const WORLD = { width: 3300, height: 850, gravity: 2400 };
+const VIEW_HEIGHT = 720;
 const FLOOR_Y = 665;
 
 const keys = new Set();
@@ -59,17 +64,33 @@ const justPressed = new Set();
 let running = false;
 let won = false;
 let lastTime = 0;
-let toastTimer = 0;
 let cameraX = 0;
 let cameraY = 0;
 let particles = [];
 let stains = [];
+let waterStations = [];
 let currentLevelIndex = 0;
 let targets = [];
+let actionMode = "pee";
+let renderScale = 1;
+let viewportWorldWidth = 1280;
+
+function resizeCanvasToDisplay() {
+  const rect = canvas.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect.width));
+  const height = Math.max(1, Math.round(rect.height));
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  renderScale = canvas.height / VIEW_HEIGHT;
+  viewportWorldWidth = canvas.width / renderScale;
+}
 
 function syncAppHeight() {
   const height = telegram?.viewportHeight || window.innerHeight;
   document.documentElement.style.setProperty("--app-height", `${height}px`);
+  resizeCanvasToDisplay();
 }
 
 function initTelegram() {
@@ -140,188 +161,110 @@ let platforms = defaultPlatforms.map((platform) => ({ ...platform }));
 
 const levels = [
   {
-    title: "Уровень 1: весь дом мой",
+    title: "Уровень 1: домашний рейд",
     intro: "Какалапочка вышла на рейд",
     win: "Дом захвачен",
+    playerStart: { x: 110, y: FLOOR_Y - 54 },
+    rooms: defaultRooms,
+    platforms: defaultPlatforms,
+    waterStations: [{ x: 142, y: FLOOR_Y - 46, w: 58, h: 38, name: "миска с водой" }],
     targets: [
-      { x: 250, y: 520, w: 48, h: 44, name: "тапок хозяина", icon: "shoe", marked: false },
+      { x: 260, y: 520, w: 52, h: 42, name: "тапок хозяина", icon: "shoe", marked: false },
       { x: 560, y: 420, w: 54, h: 48, name: "коробка у двери", icon: "box", marked: false },
       { x: 1032, y: 493, w: 62, h: 45, name: "бирюзовая тумба", icon: "cabinet", marked: false },
       { x: 1328, y: 360, w: 74, h: 62, name: "трон в ванной", icon: "toilet", marked: false },
-      { x: 1582, y: 510, w: 66, h: 48, name: "пакет наполнителя", icon: "bag", marked: false },
-      { x: 1868, y: 506, w: 48, h: 42, name: "миска с едой", icon: "bowl", marked: false },
+      { x: 1600, y: 510, w: 66, h: 48, name: "пакет наполнителя", icon: "bag", marked: false },
+      { x: 1880, y: 506, w: 48, h: 42, name: "миска с едой", icon: "bowl", marked: false },
       { x: 2248, y: 404, w: 64, h: 48, name: "чайник", icon: "kettle", marked: false },
-      { x: 2764, y: 500, w: 70, h: 48, name: "диванная подушка", icon: "pillow", marked: false },
-      { x: 3124, y: 392, w: 70, h: 56, name: "телевизор", icon: "tv", marked: false },
+      { x: 2784, y: 500, w: 70, h: 48, name: "диванная подушка", icon: "pillow", marked: false },
+      { x: 3140, y: 392, w: 70, h: 56, name: "телевизор", icon: "tv", marked: false },
     ],
   },
   {
     title: "Уровень 2: все кроссовки в доме",
     intro: "Найди и пометь каждую пару кроссовок",
     win: "Кроссовочный террор завершен",
+    playerStart: { x: 110, y: FLOOR_Y - 54 },
+    rooms: defaultRooms,
+    platforms: defaultPlatforms,
+    waterStations: [{ x: 1880, y: 506, w: 58, h: 38, name: "миска с водой" }],
     targets: [
-      { x: 148, y: 520, w: 52, h: 42, name: "черные кроссовки у входа", icon: "shoe", marked: false },
-      { x: 254, y: 520, w: 52, h: 42, name: "белые кроссовки у входа", icon: "shoe", marked: false },
-      { x: 454, y: 424, w: 52, h: 42, name: "кроссовки на полке", icon: "shoe", marked: false },
-      { x: 792, y: 546, w: 52, h: 42, name: "кроссовки у порога ванной", icon: "shoe", marked: false },
-      { x: 1010, y: 494, w: 52, h: 42, name: "кроссовки под тумбой", icon: "shoe", marked: false },
-      { x: 1546, y: 514, w: 52, h: 42, name: "кроссовки возле наполнителя", icon: "shoe", marked: false },
-      { x: 1788, y: 506, w: 52, h: 42, name: "кухонные беговые кроссовки", icon: "shoe", marked: false },
-      { x: 2138, y: 410, w: 52, h: 42, name: "кроссовки на столе", icon: "shoe", marked: false },
-      { x: 2450, y: 546, w: 52, h: 42, name: "кроссовки у стула", icon: "shoe", marked: false },
-      { x: 2748, y: 504, w: 52, h: 42, name: "кроссовки на диване", icon: "shoe", marked: false },
-      { x: 3104, y: 406, w: 52, h: 42, name: "кроссовки у телевизора", icon: "shoe", marked: false },
-      { x: 3208, y: 616, w: 52, h: 42, name: "последние спрятанные кроссовки", icon: "shoe", marked: false },
+      { x: 250, y: 520, w: 52, h: 42, name: "кроссовки у входа", icon: "shoe", marked: false },
+      { x: 500, y: 424, w: 52, h: 42, name: "кроссовки на полке", icon: "shoe", marked: false },
+      { x: 842, y: 546, w: 52, h: 42, name: "кроссовки у ванной", icon: "shoe", marked: false },
+      { x: 1058, y: 494, w: 52, h: 42, name: "кроссовки под тумбой", icon: "shoe", marked: false },
+      { x: 1578, y: 514, w: 52, h: 42, name: "кроссовки возле наполнителя", icon: "shoe", marked: false },
+      { x: 2188, y: 410, w: 52, h: 42, name: "кроссовки на столе", icon: "shoe", marked: false },
+      { x: 2470, y: 546, w: 52, h: 42, name: "кроссовки у стула", icon: "shoe", marked: false },
+      { x: 2800, y: 504, w: 52, h: 42, name: "кроссовки на диване", icon: "shoe", marked: false },
+      { x: 3140, y: 406, w: 52, h: 42, name: "кроссовки у телевизора", icon: "shoe", marked: false },
     ],
   },
   {
-    title: "Уровень 3: ванная без свидетелей",
-    intro: "Ванная слишком чистая. Это подозрительно",
-    win: "Ванная стала честной",
-    targets: [
-      { x: 960, y: 494, w: 64, h: 50, name: "полотенце", icon: "clothes", marked: false },
-      { x: 1108, y: 494, w: 64, h: 50, name: "ванная тумба", icon: "cabinet", marked: false },
-      { x: 1300, y: 364, w: 78, h: 62, name: "унитаз", icon: "toilet", marked: false },
-      { x: 1468, y: 504, w: 70, h: 52, name: "ванна", icon: "bathtub", marked: false },
-      { x: 1588, y: 510, w: 68, h: 50, name: "пакет наполнителя", icon: "bag", marked: false },
-      { x: 1744, y: 506, w: 64, h: 50, name: "миска", icon: "bowl", marked: false },
+    title: "Уровень 3: ковры и кровати",
+    intro: "Мягкое должно стать подозрительным",
+    win: "Спальня потеряла невинность",
+    playerStart: { x: 110, y: FLOOR_Y - 54 },
+    rooms: [
+      { x: 0, w: 830, name: "коридор", wall: "#b7c6bf", trim: "#6d6a5d" },
+      { x: 830, w: 820, name: "спальня", wall: "#d2c2da", trim: "#71547e" },
+      { x: 1650, w: 820, name: "гостиная", wall: "#d8c4b3", trim: "#9a6858" },
+      { x: 2470, w: 830, name: "лежанка", wall: "#c4d0dc", trim: "#5d7088" },
     ],
-  },
-  {
-    title: "Уровень 4: финал на диване",
-    intro: "Финальный рейд: важные вещи хозяев",
-    win: "Финальный хаос оформлен",
+    platforms: [
+      { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
+      { x: 160, y: 568, w: 250, h: 30, type: "rug" },
+      { x: 560, y: 500, w: 260, h: 30, type: "bed" },
+      { x: 980, y: 432, w: 260, h: 28, type: "bed" },
+      { x: 1380, y: 530, w: 230, h: 28, type: "shelf" },
+      { x: 1780, y: 470, w: 270, h: 30, type: "sofa" },
+      { x: 2200, y: 560, w: 230, h: 28, type: "rug" },
+      { x: 2620, y: 490, w: 260, h: 30, type: "bed" },
+      { x: 3000, y: 420, w: 220, h: 28, type: "shelf" },
+    ],
+    waterStations: [{ x: 1460, y: 486, w: 58, h: 38, name: "миска с водой" }],
     targets: [
-      { x: 1860, y: 506, w: 64, h: 50, name: "миска на кухне", icon: "bowl", marked: false },
-      { x: 2212, y: 404, w: 70, h: 52, name: "чайник", icon: "kettle", marked: false },
-      { x: 2458, y: 546, w: 64, h: 50, name: "ноутбук", icon: "laptop", marked: false },
-      { x: 2708, y: 496, w: 76, h: 54, name: "диван", icon: "couch", marked: false },
-      { x: 2868, y: 498, w: 70, h: 52, name: "подушка", icon: "pillow", marked: false },
-      { x: 3108, y: 394, w: 78, h: 58, name: "телевизор", icon: "tv", marked: false },
-      { x: 3208, y: 616, w: 56, h: 42, name: "последний кроссовок", icon: "shoe", marked: false },
+      { x: 230, y: 520, w: 76, h: 48, name: "коврик у двери", icon: "pillow", marked: false },
+      { x: 640, y: 448, w: 78, h: 54, name: "кровать хозяев", icon: "bed", marked: false },
+      { x: 1070, y: 380, w: 78, h: 54, name: "подушка на кровати", icon: "pillow", marked: false },
+      { x: 1440, y: 478, w: 70, h: 50, name: "плед", icon: "clothes", marked: false },
+      { x: 1860, y: 418, w: 82, h: 54, name: "диван", icon: "couch", marked: false },
+      { x: 2280, y: 512, w: 76, h: 48, name: "ковер в гостиной", icon: "pillow", marked: false },
+      { x: 2710, y: 438, w: 78, h: 54, name: "гостевая кровать", icon: "bed", marked: false },
+      { x: 3060, y: 368, w: 70, h: 50, name: "последняя подушка", icon: "pillow", marked: false },
     ],
   },
 ];
 
-const locationThemes = [
-  {
-    name: "балконный заговор",
-    rooms: [
-      ["балкон", "#cfe1dc", "#4b8d8a"],
-      ["кладовка", "#c7beb2", "#796956"],
-      ["комната", "#c9b7d8", "#71547e"],
-      ["ночной угол", "#b6c2d5", "#4f6076"],
-    ],
-    icons: ["shoe", "box", "clothes", "pillow", "bag", "laptop"],
-  },
-  {
-    name: "кухонный саботаж",
-    rooms: [
-      ["кухня", "#ecd9b7", "#c97958"],
-      ["стол", "#d7c8ac", "#8b6046"],
-      ["холодный угол", "#c8dfdf", "#5a9696"],
-      ["кладовка", "#d0c7b5", "#78634a"],
-    ],
-    icons: ["bowl", "kettle", "box", "bag", "shoe", "laptop"],
-  },
-  {
-    name: "диванный рейв",
-    rooms: [
-      ["диван", "#c5b3cf", "#6c587b"],
-      ["телек", "#b8c2c6", "#56656b"],
-      ["плед", "#d8c2b5", "#9a6858"],
-      ["тайник", "#c8c1ac", "#7b6d4c"],
-    ],
-    icons: ["couch", "pillow", "tv", "laptop", "shoe", "clothes"],
-  },
-  {
-    name: "ванная тревога",
-    rooms: [
-      ["ванная", "#c4e5e2", "#4aa5a5"],
-      ["раковина", "#dce9e5", "#7aa5a0"],
-      ["стирка", "#ccd8e1", "#6c8294"],
-      ["трон", "#d9e4dd", "#697c70"],
-    ],
-    icons: ["toilet", "bathtub", "clothes", "cabinet", "bag", "shoe"],
-  },
-];
-
-function seededRandom(seed) {
-  let value = seed % 2147483647;
-  if (value <= 0) value += 2147483646;
-  return () => {
-    value = (value * 16807) % 2147483647;
-    return (value - 1) / 2147483646;
-  };
-}
-
-function pick(list, random) {
-  return list[Math.floor(random() * list.length)];
-}
-
-function makeRooms(theme) {
-  const width = WORLD.width / theme.rooms.length;
-  return theme.rooms.map(([name, wall, trim], index) => ({
-    x: index * width,
-    w: width,
-    name,
-    wall,
-    trim,
-  }));
-}
-
-function generateProceduralLevel(index) {
-  const random = seededRandom(9000 + index * 97);
-  const theme = locationThemes[index % locationThemes.length];
-  const generatedPlatforms = [{ x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" }];
-  let x = 96;
-  let y = 568;
-
-  for (let i = 0; i < 12; i += 1) {
-    const w = 170 + Math.floor(random() * 110);
-    const nextY = clamp(y + (random() - 0.5) * 190, 405, 590);
-    generatedPlatforms.push({
-      x,
-      y: nextY,
-      w,
-      h: 28 + Math.floor(random() * 8),
-      type: pick(["shelf", "table", "chair", "counter", "sofa", "bath-cabinet"], random),
-    });
-    x += 215 + Math.floor(random() * 105);
-    y = nextY;
-  }
-
-  const targetCount = Math.min(8 + Math.floor(index / 2), 15);
-  const generatedTargets = generatedPlatforms
-    .slice(1)
-    .sort(() => random() - 0.5)
-    .slice(0, targetCount)
-    .map((platform, targetIndex) => {
-      const icon = pick(theme.icons, random);
-      return {
-        x: platform.x + 24 + Math.floor(random() * Math.max(1, platform.w - 92)),
-        y: platform.y - 52,
-        w: icon === "tv" || icon === "couch" ? 76 : 60,
-        h: 48,
-        name: `${theme.name}: цель ${targetIndex + 1}`,
-        icon,
-        marked: false,
-      };
-    })
-    .sort((a, b) => a.x - b.x);
-
-  return {
-    title: `Уровень ${index + 1}: ${theme.name}`,
-    intro: `Новая локация: ${theme.name}`,
-    win: `${theme.name} зачищен`,
-    rooms: makeRooms(theme),
-    platforms: generatedPlatforms,
-    targets: generatedTargets,
-  };
-}
+const vetLevel = {
+  title: "Финал: ветеринар",
+  intro: "Какалапочка попала к ветеринару. Рейд окончен",
+  win: "Ветеринар озадачен",
+  isFinal: true,
+  playerStart: { x: 170, y: FLOOR_Y - 54 },
+  rooms: [
+    { x: 0, w: 1100, name: "приёмная", wall: "#d8e4df", trim: "#6e8c82" },
+    { x: 1100, w: 1100, name: "кабинет", wall: "#d6e4ec", trim: "#5c7d92" },
+    { x: 2200, w: 1100, name: "стол осмотра", wall: "#e7ded2", trim: "#8d765c" },
+  ],
+  platforms: [
+    { x: 0, y: FLOOR_Y, w: WORLD.width, h: 185, type: "floor" },
+    { x: 520, y: 560, w: 260, h: 30, type: "table" },
+    { x: 1120, y: 500, w: 320, h: 30, type: "counter" },
+    { x: 1780, y: 455, w: 300, h: 30, type: "table" },
+    { x: 2420, y: 525, w: 360, h: 30, type: "vet" },
+  ],
+  waterStations: [],
+  targets: [
+    { x: 620, y: 506, w: 72, h: 52, name: "переноска", icon: "box", marked: false },
+    { x: 1240, y: 446, w: 72, h: 52, name: "шкафчик с лекарствами", icon: "cabinet", marked: false },
+    { x: 1880, y: 402, w: 72, h: 52, name: "ноутбук ветеринара", icon: "laptop", marked: false },
+    { x: 2530, y: 472, w: 78, h: 56, name: "стол осмотра", icon: "vet", marked: false },
+  ],
+};
 
 function getLevel(index) {
-  return levels[index] || generateProceduralLevel(index);
+  return levels[index] || vetLevel;
 }
 
 targets = getLevel(0).targets.map((target) => ({ ...target, marked: false }));
@@ -341,15 +284,16 @@ function resetGame(levelIndex = currentLevelIndex) {
   rooms = (level.rooms || defaultRooms).map((room) => ({ ...room }));
   platforms = (level.platforms || defaultPlatforms).map((platform) => ({ ...platform }));
   targets = level.targets.map((target) => ({ ...target, marked: false }));
-  player.x = 110;
-  player.y = 568;
+  waterStations = (level.waterStations || []).map((station) => ({ ...station }));
+  player.x = level.playerStart?.x ?? 110;
+  player.y = level.playerStart?.y ?? FLOOR_Y - player.h;
   player.vx = 0;
   player.vy = 0;
   player.dir = 1;
   player.grounded = false;
   player.coyote = 0;
   player.jumpBuffer = 0;
-  player.sass = 100;
+  player.sass = level.isFinal ? 100 : 65;
   player.stateTime = 0;
   cameraX = 0;
   cameraY = 0;
@@ -363,14 +307,13 @@ function resetGame(levelIndex = currentLevelIndex) {
   startOverlay.classList.remove("is-visible");
   telegram?.MainButton?.hide();
   missionText.textContent = level.title.toLowerCase();
-  showToast(level.intro);
+  setStatus(level.intro);
   updateHud();
 }
 
-function showToast(message, seconds = 1.4) {
+function setStatus(message) {
   toast.textContent = message;
   toast.classList.add("is-visible");
-  toastTimer = seconds;
 }
 
 function updateHud() {
@@ -380,10 +323,13 @@ function updateHud() {
 }
 
 function markTarget(target) {
-  if (!target || target.marked || player.sass < 8) return;
+  if (!target || target.marked || player.sass < 12) {
+    setStatus("Мочи не хватает. Найди миску с водой");
+    return;
+  }
 
   target.marked = true;
-  player.sass = clamp(player.sass - 7, 0, 100);
+  player.sass = clamp(player.sass - 12, 0, 100);
   stains.push({
     x: target.x + target.w / 2,
     y: target.y + target.h - 4,
@@ -403,13 +349,46 @@ function markTarget(target) {
     });
   }
 
-  showToast(`${target.name}: обоссано`);
+  setStatus(`${target.name}: обоссано`);
   updateHud();
 
   const marked = targets.filter((item) => item.marked).length;
   if (marked === targets.length) {
     winGame();
   }
+}
+
+function emptyPee() {
+  if (player.sass < 6) {
+    setStatus("Пустой бак. Нужно попить воды");
+    return;
+  }
+  player.sass = clamp(player.sass - 6, 0, 100);
+  stains.push({
+    x: player.x + player.w / 2,
+    y: player.y + player.h + 4,
+    rx: 42,
+    ry: 10,
+    alpha: 0.72,
+  });
+  for (let i = 0; i < 10; i += 1) {
+    particles.push({
+      x: player.x + player.w / 2,
+      y: player.y + 38,
+      vx: (Math.random() - 0.5) * 120,
+      vy: -60 - Math.random() * 80,
+      life: 0.25 + Math.random() * 0.18,
+      size: 2 + Math.random() * 2,
+    });
+  }
+  setStatus("Какалапочка сделала лужу просто так");
+  updateHud();
+}
+
+function drinkWater(station) {
+  player.sass = clamp(player.sass + 35, 0, 100);
+  setStatus(`${station.name}: бак пополнен`);
+  updateHud();
 }
 
 function winGame() {
@@ -436,6 +415,48 @@ function getNearbyTarget() {
     h: player.h + 34,
   };
   return targets.find((target) => !target.marked && rectsOverlap(reach, target));
+}
+
+function getNearbyWater() {
+  const reach = {
+    x: player.x - 26,
+    y: player.y - 14,
+    w: player.w + 52,
+    h: player.h + 32,
+  };
+  return waterStations.find((station) => rectsOverlap(reach, station));
+}
+
+function updateActionState() {
+  const water = getNearbyWater();
+  const target = getNearbyTarget();
+  actionMode = water ? "drink" : "pee";
+  if (markButton) {
+    markButton.textContent = water ? "Пить" : "Обоссать";
+    markButton.setAttribute("aria-label", water ? "Пить воду" : "Обоссать предмет");
+    markButton.classList.toggle("is-drink", Boolean(water));
+  }
+  if (water) {
+    setStatus(`Пить: ${water.name}`);
+  } else if (target) {
+    setStatus(`Обоссать: ${target.name}`);
+  } else {
+    setStatus("Можно обоссать предмет или сделать лужу");
+  }
+}
+
+function useAction() {
+  const water = getNearbyWater();
+  if (water) {
+    drinkWater(water);
+    return;
+  }
+  const target = getNearbyTarget();
+  if (target) {
+    markTarget(target);
+  } else {
+    emptyPee();
+  }
 }
 
 function updatePlayer(dt) {
@@ -475,7 +496,7 @@ function updatePlayer(dt) {
     player.grounded = false;
     player.coyote = 0;
     player.jumpBuffer = 0;
-    showToast("мяв-прыжок", 0.55);
+    setStatus("мяв-прыжок");
   }
 
   if (!jumpHeld && player.vy < -220) {
@@ -486,15 +507,8 @@ function updatePlayer(dt) {
 
   if (justPressed.has("e") || justPressed.has("у")) {
     haptic("action");
-    const target = getNearbyTarget();
-    if (target) {
-      markTarget(target);
-    } else {
-      showToast("подойди ближе и жми «Обоссать»", 0.95);
-    }
+    useAction();
   }
-
-  player.sass = clamp(player.sass + dt * 2.4, 0, 100);
 }
 
 function moveAndCollide(dt) {
@@ -530,11 +544,12 @@ function moveAndCollide(dt) {
   }
 
   if (player.y > WORLD.height + 120) {
-    player.x = 110;
-    player.y = 568;
+    const level = getLevel(currentLevelIndex);
+    player.x = level.playerStart?.x ?? 110;
+    player.y = level.playerStart?.y ?? FLOOR_Y - player.h;
     player.vx = 0;
     player.vy = 0;
-    showToast("Какалапочка сделала вид, что так и надо");
+    setStatus("Какалапочка сделала вид, что так и надо");
   }
 }
 
@@ -554,30 +569,29 @@ function update(dt) {
   updatePlayer(dt);
   updateParticles(dt);
 
-  const targetCameraX = clamp(player.x + player.w / 2 - canvas.width / 2, 0, WORLD.width - canvas.width);
+  resizeCanvasToDisplay();
+  const targetCameraX = clamp(
+    player.x + player.w / 2 - viewportWorldWidth / 2,
+    0,
+    WORLD.width - viewportWorldWidth,
+  );
   cameraX += (targetCameraX - cameraX) * Math.min(1, dt * 7.5);
   cameraY = 0;
 
-  if (toastTimer > 0) {
-    toastTimer -= dt;
-    if (toastTimer <= 0) toast.classList.remove("is-visible");
-  }
-
-  const nearby = getNearbyTarget();
-  if (nearby && toastTimer <= 0.05) {
-    showToast(`Обоссать: ${nearby.name}`, 0.22);
-  }
-
+  updateActionState();
   updateHud();
 }
 
 function draw() {
+  resizeCanvasToDisplay();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
+  ctx.scale(renderScale, renderScale);
   ctx.translate(-Math.round(cameraX), -Math.round(cameraY));
 
   drawWorld();
   drawStains();
+  drawWaterStations();
   drawTargets();
   drawPlatforms();
   drawPlayer();
@@ -619,6 +633,28 @@ function drawWorld() {
   }
 }
 
+function drawWaterStations() {
+  for (const station of waterStations) {
+    ctx.save();
+    const sprite = objectSprites.water;
+    ctx.fillStyle = "rgba(147, 219, 255, 0.86)";
+    roundRect(station.x - 8, station.y - 8, station.w + 16, station.h + 16, 12, true, true);
+    if (sprite?.complete && sprite.naturalWidth > 0) {
+      ctx.drawImage(sprite, station.x, station.y - 4, station.w, station.h + 8);
+    } else {
+      ctx.fillStyle = "#65c9ff";
+      ctx.beginPath();
+      ctx.ellipse(station.x + station.w / 2, station.y + station.h / 2, station.w / 2, station.h / 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#d9f6ff";
+    ctx.beginPath();
+    ctx.arc(station.x + station.w / 2, station.y - 13, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 function drawPlatforms() {
   for (const p of platforms) {
     if (p.type === "floor") continue;
@@ -642,6 +678,22 @@ function drawPlatforms() {
       roundRect(p.x + 18, p.y - 42, p.w - 36, 52, 8, true);
       ctx.fillStyle = "#a590c0";
       roundRect(p.x + 44, p.y - 64, p.w - 88, 38, 8, true);
+    }
+    if (p.type === "rug") {
+      ctx.fillStyle = "#b85d66";
+      roundRect(p.x + 14, p.y - 10, p.w - 28, 18, 9, true);
+    }
+    if (p.type === "bed") {
+      ctx.fillStyle = "#e6d8c8";
+      roundRect(p.x + 12, p.y - 38, p.w - 24, 42, 8, true);
+      ctx.fillStyle = "#9eb7cf";
+      roundRect(p.x + 26, p.y - 32, 58, 25, 8, true);
+    }
+    if (p.type === "vet") {
+      ctx.fillStyle = "#dce7ea";
+      roundRect(p.x + 20, p.y - 34, p.w - 40, 38, 8, true);
+      ctx.fillStyle = "#77a7b4";
+      ctx.fillRect(p.x + 54, p.y - 50, p.w - 108, 18);
     }
   }
 }
@@ -859,7 +911,10 @@ function drawParticles() {
 }
 
 function drawVignette() {
-  const gradient = ctx.createRadialGradient(640, 360, 120, 640, 360, 760);
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const radius = Math.max(canvas.width, canvas.height) * 0.62;
+  const gradient = ctx.createRadialGradient(cx, cy, 120, cx, cy, radius);
   gradient.addColorStop(0, "rgba(0,0,0,0)");
   gradient.addColorStop(1, "rgba(0,0,0,0.26)");
   ctx.fillStyle = gradient;

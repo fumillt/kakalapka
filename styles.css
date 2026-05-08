@@ -7,6 +7,8 @@
   --app-height: 100vh;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --controls-height: 112px;
+  --hud-height: 76px;
+  --toast-height: 42px;
 }
 
 * {
@@ -43,7 +45,8 @@ button:hover {
 }
 
 .shell {
-  min-height: var(--app-height);
+  height: var(--app-height);
+  max-height: var(--app-height);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   justify-items: center;
@@ -51,12 +54,14 @@ button:hover {
   padding: 18px;
   gap: 14px;
   position: relative;
+  overflow: hidden;
 }
 
 .game-wrap {
   position: relative;
   width: min(100%, 1280px);
-  height: 100%;
+  height: auto;
+  align-self: stretch;
   min-height: 0;
   max-height: none;
   overflow: hidden;
@@ -135,9 +140,12 @@ canvas {
 
 .toast {
   position: relative;
-  display: none;
+  display: grid;
+  place-items: center;
   transform: none;
   min-width: 240px;
+  width: min(100%, 760px);
+  min-height: var(--toast-height);
   max-width: calc(100% - 32px);
   padding: 10px 14px;
   border-radius: 8px;
@@ -152,7 +160,7 @@ canvas {
 }
 
 .shell.is-playing .toast.is-visible {
-  display: block;
+  opacity: 1;
 }
 
 .touch-controls {
@@ -169,6 +177,10 @@ canvas {
   background: rgba(16, 13, 11, 0.58);
   backdrop-filter: blur(10px);
   z-index: 6;
+}
+
+.shell.is-playing .touch-controls {
+  display: flex;
 }
 
 .move-pad,
@@ -216,6 +228,11 @@ canvas {
   background: #f5c65f;
   color: #26180d;
   font-size: clamp(1rem, 4.2vw, 1.45rem);
+}
+
+.touch-button.mark.is-drink {
+  background: #58c7ff;
+  color: #081923;
 }
 
 .toast.is-visible {
@@ -306,7 +323,7 @@ kbd {
   }
 
   .shell {
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto minmax(0, 1fr) var(--toast-height) auto;
     padding: 8px 10px calc(14px + var(--safe-bottom));
     gap: 8px;
   }
@@ -314,7 +331,7 @@ kbd {
   .game-wrap {
     width: min(100%, 760px);
     max-width: 760px;
-    height: 100%;
+    height: auto;
     min-height: 0;
     max-height: none;
     border-radius: 8px;
@@ -323,6 +340,7 @@ kbd {
   .hud {
     width: min(100%, 760px);
     gap: 8px;
+    min-height: var(--hud-height);
   }
 
   .brand {
@@ -363,10 +381,6 @@ kbd {
 
   .touch-controls {
     display: none;
-  }
-
-  .shell.is-playing .touch-controls {
-    display: flex;
   }
 
   .meter span {
